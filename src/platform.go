@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 type Platform struct {
 	Addr     Addr
 	DataBase DataBase
@@ -11,11 +13,69 @@ const (
 	Function = "Function"
 )
 
-func (pl Platform) NameAvailable(name string) bool {
-	return true
-}
+func (pl Platform) Register(agent *Agent) bool {
+	names := &Trie{}
+	err := pl.DataBase.GetLock(Name, names)
+	if err != nil {
+		return false
+	}
+	valid := CheckWord(names, agent.Name)
+	if !valid {
+		return false
+	}
+	AddWord(names, agent.Name)
+	err = pl.DataBase.StoreLock(Name, names)
+	if err != nil {
+		return false
+	}
 
-func (pl Platform) Register(agent Agent) bool {
+	eraseName := func() {
+		for {
+			names = &Trie{}
+			err := pl.DataBase.GetLock(Name, names)
+			if err != nil {
+				continue
+			}
+			RemoveWord(names, agent.Name)
+			err = pl.DataBase.StoreLock(Name, names)
+			if err != nil {
+				continue
+			}
+			break
+		}
+
+	}
+
+	functions := &Trie{}
+
+	err = pl.DataBase.GetLock(Function, functions)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	exist := CheckWord(functions, agent.Function)
+	if !exist {
+		AddWord(functions, agent.Function)
+	}
+	err = pl.DataBase.StoreLock(Function, functions)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+
+	agentsByFunction := make([]string, 0)
+	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	agentsByFunction = append(agentsByFunction, agent.Name)
+	err = pl.DataBase.StoreLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	if err != nil {
+		go eraseName()
+		return false
+	}
 	return true
 }
 
