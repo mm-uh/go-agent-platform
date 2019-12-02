@@ -7,8 +7,8 @@ type Platform struct {
 }
 
 const (
-	ByName     = "ByName"
-	ByFunction = "ByFunction"
+	Name     = "Name"
+	Function = "Function"
 )
 
 func (pl Platform) NameAvailable(name string) bool {
@@ -27,7 +27,7 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 	var agentsNames []string
 	// Should return a []string in agentsNames
 	// Represent all agents names
-	err := pl.DataBase.Get(ByName, &agentsNames)
+	err := pl.DataBase.Get(Name, &agentsNames)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +47,9 @@ func (pl Platform) LocateAgent(name string) (Agent, error) {
 	var agent Agent
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(ByName+":"+name, &agent)
+	err := pl.DataBase.Get(Name+":"+name, &agent)
 	if err != nil {
-		return Agent{}, nil
+		return Agent{}, err
 	}
 	return agent, nil
 }
@@ -63,7 +63,7 @@ func (pl Platform) getAgentsByFunctions(name string) ([]Agent, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(ByFunction+":"+name, &agents)
+	err := pl.DataBase.Get(Function+":"+name, &agents)
 	if err != nil {
 		return nil, nil
 	}
