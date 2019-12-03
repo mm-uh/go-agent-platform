@@ -15,8 +15,8 @@ func (pl Platform) NameAvailable(name string) bool {
 	return true
 }
 
-func (pl Platform) Register(agent Agent) bool {
-	return true
+func (pl Platform) Register(agent Agent) error {
+	return nil
 }
 
 // Get all agents location Matching a criteria, Should be one of next's:
@@ -59,7 +59,7 @@ func (pl Platform) LocateAgent(name string) (Agent, error) {
 //	ByName
 //	ByFunction
 // Only one Agent
-func (pl Platform) getAgentsByFunctions(name string) ([]Agent, error) {
+func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
