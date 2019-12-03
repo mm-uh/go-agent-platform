@@ -104,7 +104,7 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 		return nil, err
 	}
 
-	return GetAllWords(agentsNames), nil
+	return GetAllWords(&agentsNames), nil
 }
 
 // Get a specific agents matching a criteria, Should be one of next's:
