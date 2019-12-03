@@ -30,7 +30,10 @@ func (db *DatabaseAndPexBasedOnKademlia) Get(key string, receiver interface{}) e
 func (db *DatabaseAndPexBasedOnKademlia) Store(key string, value interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	id.GetFromString(string(hash[:]))
+	err := id.GetFromString(string(hash[:]))
+	if err != nil {
+		return err
+	}
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -41,7 +44,10 @@ func (db *DatabaseAndPexBasedOnKademlia) Store(key string, value interface{}) er
 func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	id.GetFromString(string(hash[:]))
+	err := id.GetFromString(string(hash[:]))
+	if err != nil {
+		return err
+	}
 	val, err := db.Kd.GetAndLock(db.Kd.GetContactInformation(), &id)
 	if err != nil {
 		return err
@@ -52,7 +58,10 @@ func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{
 func (db *DatabaseAndPexBasedOnKademlia) StoreLock(key string, value interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	id.GetFromString(string(hash[:]))
+	err := id.GetFromString(string(hash[:]))
+	if err != nil {
+		return err
+	}
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -67,7 +76,10 @@ func (db *DatabaseAndPexBasedOnKademlia) GetPeers() []Addr {
 	}
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte("PORT"))
-	id.GetFromString(hex.EncodeToString(hash[:]))
+	err = id.GetFromString(hex.EncodeToString(hash[:]))
+	if err != nil {
+		return nil
+	}
 
 	answ := make([]Addr, 0)
 	for _, node := range nodes {

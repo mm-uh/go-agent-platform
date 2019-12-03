@@ -66,10 +66,15 @@ func (server ServerHttp) HandleGetSimilarAgents(w http.ResponseWriter, r *http.R
 		return
 	}
 	response, err := json.Marshal(agent)
+	if err != nil {
+		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
-		msg := "Couldn't marshal response"
+		msg := "Couldn't send response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
@@ -119,10 +124,15 @@ func (server ServerHttp) HandleGetAgent(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	response, err := json.Marshal(agent)
+	if err != nil {
+		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
-		msg := "Couldn't marshal response"
+		msg := "Couldn't send response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
@@ -172,10 +182,15 @@ func (server ServerHttp) HandleGetAgentsFunctions(w http.ResponseWriter, r *http
 		return
 	}
 	response, err := json.Marshal(agents)
+	if err != nil {
+		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
-		msg := "Couldn't marshal response"
+		msg := "Couldn't write response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
@@ -190,10 +205,15 @@ func (server ServerHttp) HandleAgentsNames(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	response, err := json.Marshal(agentsNames)
-	//w.Header().Set("Content-Type", "application/json")
-	_, err = io.WriteString(w, string(response))
 	if err != nil {
 		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = io.WriteString(w, string(response))
+	if err != nil {
+		msg := "Couldn't send response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
@@ -208,9 +228,14 @@ func (server ServerHttp) HandleGetPeers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	response, err := json.Marshal(peers)
-	_, err = w.Write(response)
 	if err != nil {
 		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(response)
+	if err != nil {
+		msg := "Couldn't send response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}

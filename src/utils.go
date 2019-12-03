@@ -13,7 +13,7 @@ type Trie struct {
 
 func NewTrie() *Trie {
 	return &Trie{
-		Childrens: make(map[byte]Trie, 0),
+		Childrens: make(map[byte]Trie),
 		Value:     0,
 		IsEnd:     false,
 	}
@@ -28,7 +28,7 @@ func AddWord(trie *Trie, word string) {
 	child, exist := trie.Childrens[act]
 	if !exist {
 		newTrie := Trie{
-			Childrens: make(map[byte]Trie, 0),
+			Childrens: make(map[byte]Trie),
 			Value:     act,
 			IsEnd:     false,
 		}

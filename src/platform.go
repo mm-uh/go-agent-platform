@@ -70,7 +70,11 @@ func (pl Platform) Register(agent *Agent) bool {
 		go eraseName()
 		return false
 	}
-	pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+	if err != nil {
+		go eraseName()
+		return false
+	}
 
 	agentsByFunction := make([]string, 0)
 	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)

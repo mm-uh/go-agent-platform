@@ -28,12 +28,24 @@ func main() {
 	exited := make(chan bool)
 	key := kademlia.KeyNode{}
 	id := sha1.Sum([]byte("PORT"))
-	key.GetFromString(hex.EncodeToString(id[:]))
-	val:= strconv.FormatInt(int64(port+1000), 10)
-	ln.Store(ln.GetContactInformation(), &key, val)
+	err = key.GetFromString(hex.EncodeToString(id[:]))
+	if err != nil {
+		return
+	}
+	val := strconv.FormatInt(int64(port+1000), 10)
+	err = ln.Store(ln.GetContactInformation(), &key, val)
+	if err != nil {
+		return
+	}
+
 	ln.RunServer(exited)
 	http.HandleFunc("/", EndpointHandler)
-	go http.ListenAndServe(fmt.Sprintf(":%d", port+1000), nil)
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%d", port+1000), nil)
+		if err != nil {
+			return
+		}
+	}()
 
 	if !gateway {
 		ipForJoin := os.Args[3]
@@ -50,8 +62,8 @@ func main() {
 	}
 	db := core.DatabaseAndPexBasedOnKademlia{Kd: ln}
 
-	platform := core.NewPlatform(core.Addr{Ip:ip, Port:port+2000}, &db, &db)
-	server := core.NewServer("", *platform, platform.Addr )
+	platform := core.NewPlatform(core.Addr{Ip: ip, Port: port + 2000}, &db, &db)
+	server := core.NewServer("", *platform, platform.Addr)
 	go server.RunServer()
 	if s := <-exited; s {
 		// Handle Error in method
@@ -62,5 +74,8 @@ func main() {
 
 func EndpointHandler(w http.ResponseWriter, r *http.Request) {
 	data := Node.GetInfo()
-	fmt.Fprintf(w, "%s", data)
+	_, err := fmt.Fprintf(w, "%s", data)
+	if err != nil {
+		return
+	}
 }
