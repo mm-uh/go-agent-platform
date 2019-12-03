@@ -57,16 +57,19 @@ func CheckWord(trie *Trie, word string) bool {
 	return CheckWord(&child, rest)
 }
 
-func RemoveWord(trie *Trie, word string) {
+func RemoveWord(trie *Trie, word string) *Trie {
 	if len(word) == 0 {
 		trie.IsEnd = false
+		return trie
 	}
-	act, rest := word[0], word[1:]
-	child, exist := trie.Childrens[act]
-	if !exist {
-		return
+
+	child, exist := trie.Childrens[word[0]]
+	if exist {
+		newChild := RemoveWord(&child, word[1:])
+		trie.Childrens[word[0]] = *newChild
 	}
-	RemoveWord(&child, rest)
+
+	return trie
 }
 
 func GetAllWords(trie *Trie) []string {
