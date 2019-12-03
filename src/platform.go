@@ -13,6 +13,14 @@ const (
 	Function = "Function"
 )
 
+func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
+	return &Platform{
+		Addr:     addr,
+		DataBase: db,
+		Pex:      pex,
+	}
+}
+
 func (pl Platform) Register(agent *Agent) bool {
 	names := &Trie{}
 	err := pl.DataBase.GetLock(Name, names)
