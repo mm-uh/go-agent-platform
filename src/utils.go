@@ -1,8 +1,8 @@
 package core
 
 type Addr struct {
-	ip   string
-	port int
+	Ip   string
+	Port int
 }
 
 type Trie struct {
