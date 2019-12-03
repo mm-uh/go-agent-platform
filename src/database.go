@@ -24,7 +24,7 @@ func (db *DatabaseAndPexBasedOnKademlia) Get(key string, receiver interface{}) e
 	if err != nil {
 		return err
 	}
-	if val == "" && key[:9] == Function+":" {
+	if val == "" && key[:Min(9, len(key))] == Function+":" {
 		receiver = []string{}
 		return nil
 	}
@@ -56,7 +56,7 @@ func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{
 	if err != nil {
 		return err
 	}
-	if val == "" && key[:9] == Function+":" {
+	if val == "" && key[:Min(9, len(key))] == Function+":" {
 		receiver = []string{}
 		return nil
 	}
