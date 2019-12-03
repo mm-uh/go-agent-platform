@@ -19,10 +19,6 @@ type ServerHttp struct {
 	pl     Platform
 }
 
-type Params struct {
-	Name string `json:"Name"`
-}
-
 // [GET] Get all agents that are some
 func (server ServerHttp) HandleGetSimilarAgents(w http.ResponseWriter, r *http.Request) {
 	// If the Content-Type header is present, check that it has the value
@@ -44,39 +40,40 @@ func (server ServerHttp) HandleGetSimilarAgents(w http.ResponseWriter, r *http.R
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	var getAgent Params
-	err := dec.Decode(&getAgent)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
+	pathParams := mux.Vars(r)
+	if Name, ok := pathParams["Name"]; ok {
 
-	// Check that the request body only contained a single JSON object.
-	if dec.More() {
-		msg := "Request body must only contain a single JSON object"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
+		// Check that the request body only contained a single JSON object.
+		if dec.More() {
+			msg := "Request body must only contain a single JSON object"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
 
-	agent, err := server.pl.LocateAgent(getAgent.Name)
-	if err != nil {
-		msg := "Couldn't locate the agent"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	response, err := json.Marshal(agent)
-	if err != nil {
-		msg := "Couldn't marshal response"
+		agents := server.pl.GetSimilarToAgent(Name)
+		if agents == nil {
+			msg := "Couldn't locate the agent"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+		response, err := json.Marshal(agents)
+		if err != nil {
+			msg := "Couldn't marshal response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(response)
+		if err != nil {
+			msg := "Couldn't send response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		msg := "Couldn't get Name parameter"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(response)
-	if err != nil {
-		msg := "Couldn't send response"
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
+
 	}
 }
 
@@ -102,37 +99,37 @@ func (server ServerHttp) HandleGetAgent(w http.ResponseWriter, r *http.Request) 
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	var getAgent Params
-	err := dec.Decode(&getAgent)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
+	pathParams := mux.Vars(r)
+	if Name, ok := pathParams["Name"]; ok {
 
-	// Check that the request body only contained a single JSON object.
-	if dec.More() {
-		msg := "Request body must only contain a single JSON object"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
+		// Check that the request body only contained a single JSON object.
+		if dec.More() {
+			msg := "Request body must only contain a single JSON object"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
 
-	agent, err := server.pl.LocateAgent(getAgent.Name)
-	if err != nil {
-		msg := "Couldn't locate the agent"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	response, err := json.Marshal(agent)
-	if err != nil {
-		msg := "Couldn't marshal response"
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(response)
-	if err != nil {
-		msg := "Couldn't send response"
+		agent, err := server.pl.LocateAgent(Name)
+		if err != nil {
+			msg := "Couldn't locate the agent"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+		response, err := json.Marshal(agent)
+		if err != nil {
+			msg := "Couldn't marshal response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(response)
+		if err != nil {
+			msg := "Couldn't send response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		msg := "Couldn't get Name parameter"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
@@ -160,39 +157,40 @@ func (server ServerHttp) HandleGetAgentsFunctions(w http.ResponseWriter, r *http
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	var params Params
-	err := dec.Decode(&params)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
+	pathParams := mux.Vars(r)
+	if Name, ok := pathParams["Name"]; ok {
 
-	// Check that the request body only contained a single JSON object.
-	if dec.More() {
-		msg := "Request body must only contain a single JSON object"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
+		// Check that the request body only contained a single JSON object.
+		if dec.More() {
+			msg := "Request body must only contain a single JSON object"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
 
-	agents, err := server.pl.GetAgentsByFunctions(params.Name)
-	if err != nil {
-		msg := "Couldn't locate the agent"
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	response, err := json.Marshal(agents)
-	if err != nil {
-		msg := "Couldn't marshal response"
+		agents, err := server.pl.GetAgentsByFunctions(Name)
+		if err != nil {
+			msg := "Couldn't locate the agent"
+			http.Error(w, msg, http.StatusBadRequest)
+			return
+		}
+		response, err := json.Marshal(agents)
+		if err != nil {
+			msg := "Couldn't marshal response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(response)
+		if err != nil {
+			msg := "Couldn't write response"
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		msg := "Couldn't get Name parameter"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(response)
-	if err != nil {
-		msg := "Couldn't write response"
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
+
 	}
 }
 
@@ -297,12 +295,12 @@ func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
 		prefix = "/api/v1"
 	}
 	api := server.router.PathPrefix(prefix).Subrouter()
-	api.HandleFunc("/getAllAgents", server.HandleGetAgent).Methods(http.MethodGet)
-	api.HandleFunc("/getPeers", server.HandleGetPeers).Methods(http.MethodGet)
+	api.HandleFunc("/getAgent/{Name}", server.HandleGetAgent).Methods(http.MethodGet)
+	api.HandleFunc("/getPeers/{Name}", server.HandleGetPeers).Methods(http.MethodGet)
 	api.HandleFunc("/registerAgent", server.HandleRegisterAgent).Methods(http.MethodPost)
 	api.HandleFunc("/getAllAgentsNames", server.HandleAgentsNames).Methods(http.MethodPost)
-	api.HandleFunc("/getAgentsForFunction", server.HandleGetAgentsFunctions).Methods(http.MethodPost)
-	api.HandleFunc("/getSimilarAgents", server.HandleGetSimilarAgents).Methods(http.MethodPost)
+	api.HandleFunc("/getAgentsForFunction/{Name}", server.HandleGetAgentsFunctions).Methods(http.MethodPost)
+	api.HandleFunc("/getSimilarAgents/{Name}", server.HandleGetSimilarAgents).Methods(http.MethodPost)
 
 	return server
 }
