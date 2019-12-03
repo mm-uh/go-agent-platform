@@ -1,10 +1,5 @@
 package core
 
-import (
-	"fmt"
-	"strconv"
-)
-
 type Addr struct {
 	Ip   string
 	Port int
