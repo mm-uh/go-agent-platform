@@ -5,23 +5,23 @@ type Agent struct {
 	Function string
 
 	EndpointServices []Addr
-	IsAliveService   []Addr
+	IsAliveService   map[Addr]Addr
 	Documentation    map[Addr]Addr
 	Similar          []string
 	TestCases        []TestCase
 }
 
-func NewCreate(name, functionality string, endpoints []Addr, doc map[Addr]Addr, testCases []TestCase) *Agent {
+func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[Addr]Addr, testCases []TestCase) *Agent {
 	agent := &Agent{
 		Name:             name,
 		Function:         functionality,
 		EndpointServices: endpoints,
-		IsAliveService:   nil,
+		IsAliveService:   alive,
 		Documentation:    doc,
 		Similar:          nil,
 		TestCases:        testCases,
 	}
-	go agent.UpdateAll()
+	go agent.UpdateSimilar()
 	return agent
 }
 
@@ -29,15 +29,6 @@ func (agent Agent) GetAliveService() Addr {
 	return Addr{}
 }
 
-func (agent Agent) UpdateAliveServices() {
-	// TODO
-}
-
 func (agent Agent) UpdateSimilar() {
 	// TODO
-}
-
-func (agent Agent) UpdateAll() {
-	agent.UpdateAliveServices()
-	agent.UpdateSimilar()
 }
