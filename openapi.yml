@@ -1,0 +1,206 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Agent Platform
+  description: This is a specification for openapi using
+  contact:
+    name: Agent Platform UH Team
+    email: agentPlatform@grs.uh.cu
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://agentplatform.grs.uh.cu/api/v1
+paths:
+  /getSimilarAgents/{Name}:
+    get:
+      description: Get the agents that are similars to the agent passed as paramerter
+      operationId: getSimilarAgent
+      parameters:
+        - in: path
+          name: Name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+          description: Name of the Agent
+      responses:
+        '200':
+          description: Get the agent that are similar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /getAgentsForFunction:
+    get:
+      description: Get the agents that match with the function name passed as params
+      operationId: getAgentsByFunction
+      parameters:
+        - in: path
+          name: Name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+          description: Name of the Function
+      responses:
+        '200':
+          description: Get the agent that represent the params
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /getAllAgentsNames:
+    get:
+      description: |
+        Get all agents names registered in the platforms
+      operationId: getAgentsNames
+      responses:
+        '200':
+          description: get all Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /getPeers:
+    get:
+      description: |
+        Return all peers connected to the platform network
+      operationId: getPeers
+      responses:
+        '200':
+          description: get Peers response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Addr'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /registerAgent:
+    post:
+      description: Register a new Agent in the platform
+      operationId: registerAgent
+      requestBody:
+        description: Agent to register
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Agent'
+      responses:
+        '200':
+          description: Agent registered
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /getAgent:
+    get:
+      description: Get the agent that follow a simple criteria
+      operationId: getAgent
+      parameters:
+        - in: path
+          name: Name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+          description: Name of the Agent
+      responses:
+        '200':
+          description: Get the agent that represent the params
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Addr:
+      allOf:
+        - type: object
+          required:
+            - Ip
+            - Port
+          properties:
+            Ip:
+              type: string
+            Port:
+              type: integer
+              format: int64
+    Agent:
+      type: object
+      required:
+        - name
+      properties:
+        Name:
+          type: string
+        Function:
+          type: string
+        EndpointService:
+          type: array
+          items:
+            $ref: '#/components/schemas/Addr'
+        IsAliveService:        # <---- dictionary
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Addr'
+        Documentation:        # <---- dictionary
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Addr'
+        TestCases:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestCase'
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    TestCase:
+      type: object
+      required:
+        - Input
+        - Output
+      properties:
+        Input:
+          type: string
+        Output:
+          type: string
