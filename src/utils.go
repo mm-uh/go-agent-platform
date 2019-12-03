@@ -62,3 +62,11 @@ func RemoveWord(trie *Trie, word string) {
 	}
 	RemoveWord(&child, rest)
 }
+
+func GetAllWords(trie Trie) []string {
+	return []string{
+		"Yo",
+		"Tu",
+		"El",
+	}
+}

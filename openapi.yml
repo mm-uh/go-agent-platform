@@ -147,17 +147,16 @@ paths:
 components:
   schemas:
     Addr:
-      allOf:
-        - type: object
-          required:
-            - Ip
-            - Port
-          properties:
-            Ip:
-              type: string
-            Port:
-              type: integer
-              format: int64
+      type: object
+      required:
+        - Ip
+        - Port
+      properties:
+        Ip:
+          type: string
+        Port:
+          type: integer
+          format: int64
     Agent:
       type: object
       required:

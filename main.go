@@ -47,6 +47,7 @@ func main() {
 		}
 	}()
 
+	db := core.DatabaseAndPexBasedOnKademlia{Kd: ln}
 	if !gateway {
 		ipForJoin := os.Args[3]
 		portForJoinStr := os.Args[4]
@@ -59,8 +60,18 @@ func main() {
 		if err != nil {
 			panic("Can't Join")
 		}
+	} else {
+		trie := core.NewTrie()
+		err = db.Store(core.Name, trie)
+		if err != nil {
+			return
+		}
+		err = db.Store(core.Function, trie)
+		if err != nil {
+			return
+		}
+
 	}
-	db := core.DatabaseAndPexBasedOnKademlia{Kd: ln}
 
 	platform := core.NewPlatform(core.Addr{Ip: ip, Port: port + 2000}, &db, &db)
 	server := core.NewServer("", *platform, platform.Addr)

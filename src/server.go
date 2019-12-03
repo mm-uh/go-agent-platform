@@ -296,9 +296,9 @@ func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
 	}
 	api := server.router.PathPrefix(prefix).Subrouter()
 	api.HandleFunc("/getAgent/{Name}", server.HandleGetAgent).Methods(http.MethodGet)
-	api.HandleFunc("/getPeers/{Name}", server.HandleGetPeers).Methods(http.MethodGet)
+	api.HandleFunc("/getPeers", server.HandleGetPeers).Methods(http.MethodGet)
 	api.HandleFunc("/registerAgent", server.HandleRegisterAgent).Methods(http.MethodPost)
-	api.HandleFunc("/getAllAgentsNames", server.HandleAgentsNames).Methods(http.MethodPost)
+	api.HandleFunc("/getAllAgentsNames", server.HandleAgentsNames).Methods(http.MethodGet)
 	api.HandleFunc("/getAgentsForFunction/{Name}", server.HandleGetAgentsFunctions).Methods(http.MethodPost)
 	api.HandleFunc("/getSimilarAgents/{Name}", server.HandleGetSimilarAgents).Methods(http.MethodPost)
 

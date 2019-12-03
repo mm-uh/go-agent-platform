@@ -16,7 +16,7 @@ type DatabaseAndPexBasedOnKademlia struct {
 func (db *DatabaseAndPexBasedOnKademlia) Get(key string, receiver interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	err := id.GetFromString(string(hash[:]))
+	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}
@@ -24,13 +24,17 @@ func (db *DatabaseAndPexBasedOnKademlia) Get(key string, receiver interface{}) e
 	if err != nil {
 		return err
 	}
+	if val == "" && key[:9] == Function+":" {
+		receiver = []string{}
+		return nil
+	}
 	return json.Unmarshal([]byte(val), receiver)
 }
 
 func (db *DatabaseAndPexBasedOnKademlia) Store(key string, value interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	err := id.GetFromString(string(hash[:]))
+	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}
@@ -44,7 +48,7 @@ func (db *DatabaseAndPexBasedOnKademlia) Store(key string, value interface{}) er
 func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	err := id.GetFromString(string(hash[:]))
+	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}
@@ -52,13 +56,17 @@ func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{
 	if err != nil {
 		return err
 	}
+	if val == "" && key[:9] == Function+":" {
+		receiver = []string{}
+		return nil
+	}
 	return json.Unmarshal([]byte(val), receiver)
 }
 
 func (db *DatabaseAndPexBasedOnKademlia) StoreLock(key string, value interface{}) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
-	err := id.GetFromString(string(hash[:]))
+	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}

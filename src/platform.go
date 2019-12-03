@@ -27,8 +27,8 @@ func (pl Platform) Register(agent *Agent) bool {
 	if err != nil {
 		return false
 	}
-	valid := CheckWord(names, agent.Name)
-	if !valid {
+	taken := CheckWord(names, agent.Name)
+	if taken {
 		return false
 	}
 	AddWord(names, agent.Name)
@@ -96,18 +96,15 @@ func (pl Platform) Register(agent *Agent) bool {
 //	ByName: Only 0 or 1 Agent should exits if we have this criteria
 //	ByFunction: As many as agents in our platform
 func (pl Platform) GetAllAgentsNames() ([]string, error) {
-	var agentsNames []string
+	var agentsNames Trie
 	// Should return a []string in agentsNames
 	// Represent all agents names
 	err := pl.DataBase.Get(Name, &agentsNames)
 	if err != nil {
 		return nil, err
 	}
-	if agentsNames == nil {
-		return make([]string, 0), nil
-	}
 
-	return agentsNames, nil
+	return GetAllWords(agentsNames), nil
 }
 
 // Get a specific agents matching a criteria, Should be one of next's:
