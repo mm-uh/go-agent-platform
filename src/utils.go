@@ -86,7 +86,7 @@ func getAllWords(trie *Trie, prefix string, words []string) []string {
 
 }
 
-func Min(int a, int b) int {
+func Min(a, b int) int {
 	if a > b {
 		return b
 	}
