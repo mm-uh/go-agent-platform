@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 type Platform struct {
 	Addr     Addr
 	DataBase DataBase
@@ -7,16 +9,74 @@ type Platform struct {
 }
 
 const (
-	ByName     = "ByName"
-	ByFunction = "ByFunction"
+	Name     = "Name"
+	Function = "Function"
 )
 
-func (pl Platform) NameAvailable(name string) bool {
-	return true
-}
+func (pl Platform) Register(agent *Agent) bool {
+	names := &Trie{}
+	err := pl.DataBase.GetLock(Name, names)
+	if err != nil {
+		return false
+	}
+	valid := CheckWord(names, agent.Name)
+	if !valid {
+		return false
+	}
+	AddWord(names, agent.Name)
+	err = pl.DataBase.StoreLock(Name, names)
+	if err != nil {
+		return false
+	}
 
-func (pl Platform) Register(agent Agent) error {
-	return nil
+	eraseName := func() {
+		for {
+			names = &Trie{}
+			err := pl.DataBase.GetLock(Name, names)
+			if err != nil {
+				continue
+			}
+			RemoveWord(names, agent.Name)
+			err = pl.DataBase.StoreLock(Name, names)
+			if err != nil {
+				continue
+			}
+			break
+		}
+
+	}
+
+	functions := &Trie{}
+
+	err = pl.DataBase.GetLock(Function, functions)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	exist := CheckWord(functions, agent.Function)
+	if !exist {
+		AddWord(functions, agent.Function)
+	}
+	err = pl.DataBase.StoreLock(Function, functions)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+
+	agentsByFunction := make([]string, 0)
+	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	agentsByFunction = append(agentsByFunction, agent.Name)
+	err = pl.DataBase.StoreLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	return true
 }
 
 // Get all agents location Matching a criteria, Should be one of next's:
@@ -27,7 +87,7 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 	var agentsNames []string
 	// Should return a []string in agentsNames
 	// Represent all agents names
-	err := pl.DataBase.Get(ByName, &agentsNames)
+	err := pl.DataBase.Get(Name, &agentsNames)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +107,9 @@ func (pl Platform) LocateAgent(name string) (Agent, error) {
 	var agent Agent
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(ByName+":"+name, &agent)
+	err := pl.DataBase.Get(Name+":"+name, &agent)
 	if err != nil {
-		return Agent{}, nil
+		return Agent{}, err
 	}
 	return agent, nil
 }
@@ -63,7 +123,7 @@ func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(ByFunction+":"+name, &agents)
+	err := pl.DataBase.Get(Function+":"+name, &agents)
 	if err != nil {
 		return nil, nil
 	}
