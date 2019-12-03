@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type Addr struct {
@@ -28,7 +27,6 @@ func AddWord(trie *Trie, word string) *Trie {
 	if trie == nil {
 		trie = NewTrie()
 	}
-	trie.Value, word = word[0], word[1:]
 	if len(word) == 0 {
 		trie.IsEnd = true
 		return trie
@@ -36,9 +34,10 @@ func AddWord(trie *Trie, word string) *Trie {
 	var newChild *Trie
 	child, exist := trie.Childrens[word[0]]
 	if !exist {
-		newChild = AddWord(nil, word)
+		newChild = AddWord(nil, word[1:])
+		newChild.Value = word[0]
 	} else {
-		newChild = AddWord(&child, word)
+		newChild = AddWord(&child, word[1:])
 	}
 	trie.Childrens[word[0]] = *newChild
 	return trie
@@ -75,7 +74,6 @@ func GetAllWords(trie *Trie) []string {
 }
 func getAllWords(trie *Trie, prefix string, words []string) []string {
 	prefix += string(trie.Value)
-	fmt.Println(string(trie.Value), " ", strconv.FormatBool(trie.IsEnd), " ", trie)
 	if trie.IsEnd {
 		fmt.Println("ADDING")
 		words = append(words, prefix)
