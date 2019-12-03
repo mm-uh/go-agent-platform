@@ -45,36 +45,25 @@ func (db *DatabaseAndPexBasedOnKademlia) Store(key string, value interface{}) er
 	return db.Kd.StoreOnNetwork(db.Kd.GetContactInformation(), &id, string(data))
 }
 
-func (db *DatabaseAndPexBasedOnKademlia) GetLock(key string, receiver interface{}) error {
+func (db *DatabaseAndPexBasedOnKademlia) Lock(key string) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
 	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}
-	val, err := db.Kd.GetAndLock(db.Kd.GetContactInformation(), &id)
-	if err != nil {
-		return err
-	}
-	if val == "" && key[:Min(9, len(key))] == Function+":" {
-		receiver = []string{}
-		return nil
-	}
-	return json.Unmarshal([]byte(val), receiver)
+	return db.Kd.GetLock(db.Kd.GetContactInformation(), &id)
+
 }
 
-func (db *DatabaseAndPexBasedOnKademlia) StoreLock(key string, value interface{}) error {
+func (db *DatabaseAndPexBasedOnKademlia) Unlock(key string) error {
 	id := kademlia.KeyNode{}
 	hash := sha1.Sum([]byte(key))
 	err := id.GetFromString(hex.EncodeToString(hash[:]))
 	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	return db.Kd.StoreAndUnlock(db.Kd.GetContactInformation(), &id, string(data))
+	return db.Kd.LeaveLock(db.Kd.GetContactInformation(), &id)
 }
 
 func (db *DatabaseAndPexBasedOnKademlia) GetPeers() []Addr {

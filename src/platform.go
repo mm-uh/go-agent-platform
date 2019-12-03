@@ -23,37 +23,46 @@ func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
 
 func (pl Platform) Register(agent *Agent) bool {
 	names := &Trie{}
-	err := pl.DataBase.GetLock(Name, names)
-	if err != nil {
-		return false
-	}
-	taken := CheckWord(names, agent.Name)
-	if taken {
+	unlockKey := func(key string) {
 		go func() {
 			for {
-				err := pl.DataBase.StoreLock(Name, names)
+				err := pl.DataBase.Unlock(key)
 				if err != nil {
 					continue
 				}
 				break
 			}
 		}()
+	}
+	err := pl.DataBase.Lock(Name)
+	if err != nil {
+		return false
+	}
+	defer unlockKey(Name)
+	err = pl.DataBase.Get(Name, names)
+	if err != nil {
+		return false
+	}
+
+	taken := CheckWord(names, agent.Name)
+	if taken {
+
 		return false
 	}
 	names = AddWord(names, agent.Name)
-	err = pl.DataBase.StoreLock(Name, names)
+	err = pl.DataBase.Store(Name, names)
 	if err != nil {
 		return false
 	}
 	eraseName := func() {
 		for {
-			names = &Trie{}
-			err := pl.DataBase.GetLock(Name, names)
+			err := pl.DataBase.Lock(Name)
+			defer unlockKey(Name)
 			if err != nil {
 				continue
 			}
 			RemoveWord(names, agent.Name)
-			err = pl.DataBase.StoreLock(Name, names)
+			err = pl.DataBase.Store(Name, names)
 			if err != nil {
 				continue
 			}
@@ -63,17 +72,17 @@ func (pl Platform) Register(agent *Agent) bool {
 	}
 
 	functions := &Trie{}
-
-	err = pl.DataBase.GetLock(Function, functions)
+	err = pl.DataBase.Lock(Function)
 	if err != nil {
 		go eraseName()
 		return false
 	}
+	defer unlockKey(Function)
 	exist := CheckWord(functions, agent.Function)
 	if !exist {
 		functions = AddWord(functions, agent.Function)
 	}
-	err = pl.DataBase.StoreLock(Function, functions)
+	err = pl.DataBase.Store(Function, functions)
 	if err != nil {
 		go eraseName()
 		return false
@@ -85,17 +94,24 @@ func (pl Platform) Register(agent *Agent) bool {
 	}
 
 	agentsByFunction := make([]string, 0)
-	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), &agentsByFunction)
+	err = pl.DataBase.Lock(fmt.Sprintf("%s:%s", Function, agent.Function))
+	if err != nil {
+		go eraseName()
+		return false
+	}
+	defer unlockKey(fmt.Sprintf("%s:%s", Function, agent.Function))
+	err = pl.DataBase.Get(fmt.Sprintf("%s:%s", Function, agent.Function), &agentsByFunction)
 	if err != nil {
 		go eraseName()
 		return false
 	}
 	agentsByFunction = append(agentsByFunction, agent.Name)
-	err = pl.DataBase.StoreLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
 	if err != nil {
 		go eraseName()
 		return false
 	}
+
 	return true
 }
 
