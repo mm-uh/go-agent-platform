@@ -75,7 +75,7 @@ func GetAllWords(trie *Trie) []string {
 func getAllWords(trie *Trie, prefix string, words []string) []string {
 	prefix += string(trie.Value)
 	if trie.IsEnd {
-		words = append(words, prefix)
+		words = append(words, prefix[1:])
 	}
 
 	for _, child := range trie.Childrens {
