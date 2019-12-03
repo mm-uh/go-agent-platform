@@ -29,6 +29,15 @@ func (pl Platform) Register(agent *Agent) bool {
 	}
 	taken := CheckWord(names, agent.Name)
 	if taken {
+		go func() {
+			for {
+				err := pl.DataBase.StoreLock(Name, names)
+				if err != nil {
+					continue
+				}
+				break
+			}
+		}()
 		return false
 	}
 	names = AddWord(names, agent.Name)
@@ -36,7 +45,6 @@ func (pl Platform) Register(agent *Agent) bool {
 	if err != nil {
 		return false
 	}
-
 	eraseName := func() {
 		for {
 			names = &Trie{}
@@ -77,7 +85,7 @@ func (pl Platform) Register(agent *Agent) bool {
 	}
 
 	agentsByFunction := make([]string, 0)
-	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
+	err = pl.DataBase.GetLock(fmt.Sprintf("%s:%s", Function, agent.Function), &agentsByFunction)
 	if err != nil {
 		go eraseName()
 		return false
@@ -103,7 +111,6 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return GetAllWords(&agentsNames), nil
 }
 
