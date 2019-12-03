@@ -31,7 +31,7 @@ func (pl Platform) Register(agent *Agent) bool {
 	if taken {
 		return false
 	}
-	AddWord(names, agent.Name)
+	names = AddWord(names, agent.Name)
 	err = pl.DataBase.StoreLock(Name, names)
 	if err != nil {
 		return false
@@ -63,7 +63,7 @@ func (pl Platform) Register(agent *Agent) bool {
 	}
 	exist := CheckWord(functions, agent.Function)
 	if !exist {
-		AddWord(functions, agent.Function)
+		functions = AddWord(functions, agent.Function)
 	}
 	err = pl.DataBase.StoreLock(Function, functions)
 	if err != nil {

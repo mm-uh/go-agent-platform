@@ -2,13 +2,14 @@ package main
 
 import (
 	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
-	"github.com/golang/go/src/pkg/encoding/hex"
-	core "github.com/mm-uh/go-agent-platform/src"
-	kademlia "github.com/mm-uh/go-kademlia/src"
 	"net/http"
 	"os"
 	"strconv"
+
+	core "github.com/mm-uh/go-agent-platform/src"
+	kademlia "github.com/mm-uh/go-kademlia/src"
 )
 
 var Node *kademlia.LocalKademlia

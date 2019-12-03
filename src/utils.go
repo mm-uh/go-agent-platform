@@ -1,5 +1,10 @@
 package core
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type Addr struct {
 	Ip   string
 	Port int
@@ -13,29 +18,31 @@ type Trie struct {
 
 func NewTrie() *Trie {
 	return &Trie{
-		Childrens: make(map[byte]Trie),
+		Childrens: make(map[byte]Trie, 0),
 		Value:     0,
 		IsEnd:     false,
 	}
 }
 
-func AddWord(trie *Trie, word string) {
+func AddWord(trie *Trie, word string) *Trie {
+	if trie == nil {
+		trie = NewTrie()
+	}
+	trie.Value, word = word[0], word[1:]
 	if len(word) == 0 {
 		trie.IsEnd = true
-		return
+		return trie
 	}
-	act, rest := word[0], word[1:]
-	child, exist := trie.Childrens[act]
+	var newChild *Trie
+	child, exist := trie.Childrens[word[0]]
 	if !exist {
-		newTrie := Trie{
-			Childrens: make(map[byte]Trie),
-			Value:     act,
-			IsEnd:     false,
-		}
-		trie.Childrens[act] = newTrie
-		child = newTrie
+		newChild = AddWord(nil, word)
+	} else {
+		newChild = AddWord(&child, word)
 	}
-	AddWord(&child, rest)
+	trie.Childrens[word[0]] = *newChild
+	return trie
+
 }
 
 func CheckWord(trie *Trie, word string) bool {
@@ -64,7 +71,7 @@ func RemoveWord(trie *Trie, word string) {
 }
 
 func GetAllWords(trie *Trie) []string {
-	return getAllWords(trie, "",make([]string, 0))
+	return getAllWords(trie, "", make([]string, 0))
 }
 
 func getAllWords(trie *Trie, prefix string, words []string) []string {
