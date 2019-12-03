@@ -5,13 +5,13 @@ type Agent struct {
 	Function string
 
 	EndpointServices []Addr
-	IsAliveService   map[Addr]Addr
-	Documentation    map[Addr]Addr
+	IsAliveService   map[string]Addr
+	Documentation    map[string]Addr
 	Similar          []string
 	TestCases        []TestCase
 }
 
-func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[Addr]Addr, testCases []TestCase) *Agent {
+func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[string]Addr, testCases []TestCase) *Agent {
 	agent := &Agent{
 		Name:             name,
 		Function:         functionality,
