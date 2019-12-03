@@ -63,10 +63,16 @@ func RemoveWord(trie *Trie, word string) {
 	RemoveWord(&child, rest)
 }
 
-func GetAllWords(trie Trie) []string {
-	return []string{
-		"Yo",
-		"Tu",
-		"El",
+func GetAllWords(trie *Trie, prefix string, words []string) []string {
+	prefix = append(prefix, trie.Value)
+	if trie.IsEnd {
+		words = append(words, prefix)
 	}
+
+	for _, child := range trie.Childrens {
+		words = GetAllWords(&child, prefix, words)
+	}
+
+	return words
+
 }
