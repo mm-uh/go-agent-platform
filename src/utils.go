@@ -27,6 +27,7 @@ func AddWord(trie *Trie, word string) *Trie {
 		trie.IsEnd = true
 		return trie
 	}
+
 	var newChild *Trie
 	child, exist := trie.Childrens[word[0]]
 	if !exist {

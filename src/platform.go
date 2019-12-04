@@ -1,6 +1,8 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Platform struct {
 	Addr     Addr
@@ -46,7 +48,6 @@ func (pl Platform) Register(agent *Agent) bool {
 
 	taken := CheckWord(names, agent.Name)
 	if taken {
-
 		return false
 	}
 	names = AddWord(names, agent.Name)
@@ -78,6 +79,11 @@ func (pl Platform) Register(agent *Agent) bool {
 		return false
 	}
 	defer unlockKey(Function)
+	err = pl.DataBase.Get(Function, functions)
+	if err != nil {
+		go eraseName()
+		return false
+	}
 	exist := CheckWord(functions, agent.Function)
 	if !exist {
 		functions = AddWord(functions, agent.Function)
