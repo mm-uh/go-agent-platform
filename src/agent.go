@@ -1,5 +1,10 @@
 package core
 
+import (
+	"github.com/sirupsen/logrus"
+	"strconv"
+)
+
 type Agent struct {
 	Name     string
 	Function string
@@ -31,4 +36,63 @@ func (agent Agent) GetAliveService() Addr {
 
 func (agent Agent) UpdateSimilar() {
 	// TODO
+}
+
+func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
+	var agents []string
+	similar := len(agent.Similar)
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := platform.DataBase.Get(Function+":"+agent.Function, &agents)
+	if err != nil {
+		return
+	}
+	for _, val := range agents {
+		var tempAgent Agent
+		// Get Agents with the same function
+		err := platform.DataBase.Get(Name+":"+val, &tempAgent)
+		if err != nil {
+			continue
+		}
+		if AreCompatibles(&tempAgent, agent) {
+			tempAgent.Similar = append(tempAgent.Similar, val)
+			err := platform.DataBase.StoreLock(Name+":"+val, &tempAgent)
+			if err != nil {
+				continue
+			}
+		}
+		if AreCompatibles(agent, &tempAgent) {
+			agent.Similar = append(agent.Similar, tempAgent.Name)
+		}
+	}
+	if similar != len(agent.Similar) {
+		err := platform.DataBase.StoreLock(Name+":"+agent.Name, &agent)
+		if err != nil {
+			logrus.Warn("Couldn't store agent")
+		}
+	}
+}
+
+func AreCompatibles(tempAgent , agent *Agent) bool {
+	for key, val := range tempAgent.IsAliveService {
+		// get if the endpoint is alive
+		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+			accepted := 0
+			// Check that all test cases follow the criteria
+			for _, testCase := range agent.TestCases {
+				// Check if are compatibles the test cases
+				if checkTestCase(testCase, key) {
+					accepted++
+					continue
+				}
+				break
+			}
+			return accepted == len(agent.TestCases)
+		}
+	}
+	return false
+}
+
+func checkTestCase(testCase TestCase, s string) bool {
+	return false
 }

@@ -13,7 +13,7 @@ type Trie struct {
 
 func NewTrie() *Trie {
 	return &Trie{
-		Childrens: make(map[byte]Trie, 0),
+		Childrens: make(map[byte]Trie),
 		Value:     0,
 		IsEnd:     false,
 	}

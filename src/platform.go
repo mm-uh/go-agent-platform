@@ -140,10 +140,10 @@ func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 	}
 	addr := [3]Addr{}
 	for key, val := range agent.IsAliveService {
-		if isAlive(key) {
-			addr[0] =  val
-			addr[1] = getAddrFromStr(key)
-			doc, ok := agent.Documentation[val.Ip+":"+strconv.Itoa(val.Port)]
+		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+			addr[0] = getAddrFromStr(key)
+			addr[1] = val
+			doc, ok := agent.Documentation[key]
 			if ok {
 				addr[2] = doc
 			}
