@@ -23,24 +23,20 @@ func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[strin
 		EndpointService: endpoints,
 		IsAliveService:  alive,
 		Documentation:   doc,
-		Similar:         nil,
+		Similar:         []string{},
 		TestCases:       testCases,
 	}
-	go agent.UpdateSimilar()
 	return agent
-}
-
-func (agent Agent) GetAliveService() Addr {
-	return Addr{}
-}
-
-func (agent Agent) UpdateSimilar() {
-	// TODO
 }
 
 func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 	var agents []string
-	similar := len(agent.Similar)
+	var similar int
+	if agent.Similar == nil {
+		similar = 0
+	} else {
+		similar = len(agent.Similar)
+	}
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := platform.DataBase.Get(Function+":"+agent.Function, &agents)
@@ -93,6 +89,10 @@ func AreCompatibles(tempAgent , agent *Agent) bool {
 	return false
 }
 
-func checkTestCase(testCase TestCase, s string) bool {
-	return false
+func checkTestCase(testCase TestCase, host string) bool {
+	response, err := MakeRequest(host, testCase.Input)
+	if err != nil {
+		return false
+	}
+	return response == testCase.Output
 }

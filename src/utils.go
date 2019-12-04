@@ -1,5 +1,12 @@
 package core
 
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"time"
+)
+
 type Addr struct {
 	Ip   string
 	Port int
@@ -91,4 +98,31 @@ func Min(a, b int) int {
 		return b
 	}
 	return a
+}
+
+// Check if agent is available
+// Send over a tcp connection a message 'Alive?\n'
+// Wait 5 seconds for response, that should be 'Yes\n'
+func MakeRequest(endpoint, request string) (string, error) {
+
+	conn, err := net.Dial("tcp", endpoint)
+	if err != nil {
+		return "", err
+	}
+	err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	if err != nil {
+		return "", err
+	}
+
+	// send to socket
+	_, err = fmt.Fprintf(conn, request+"\n")
+	if err != nil {
+		return "", err
+	}
+
+	message, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	return message, nil
 }

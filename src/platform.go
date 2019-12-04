@@ -1,12 +1,9 @@
 package core
 
 import (
-	"bufio"
 	"fmt"
-	"net"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Platform struct {
@@ -18,6 +15,7 @@ type Platform struct {
 const (
 	Name     = "Name"
 	Function = "Function"
+	IsAlive  = "IsAlive?"
 )
 
 func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
@@ -169,23 +167,7 @@ func getAddrFromStr(s string) Addr {
 // Send over a tcp connection a message 'Alive?\n'
 // Wait 5 seconds for response, that should be 'Yes\n'
 func isAlive(endpoint string) bool {
-
-	conn, err := net.Dial("tcp", endpoint)
-	if err != nil {
-		return false
-	}
-	err = conn.SetDeadline(time.Now().Add(5 * time.Second))
-	if err != nil {
-		return false
-	}
-	text := "Alive?"
-	// send to socket
-	_, err = fmt.Fprintf(conn, text+"\n")
-	if err != nil {
-		return false
-	}
-
-	message, err := bufio.NewReader(conn).ReadString('\n')
+	message, err := MakeRequest(endpoint, IsAlive)
 	if err != nil {
 		return false
 	}
