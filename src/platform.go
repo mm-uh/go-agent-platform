@@ -198,7 +198,7 @@ func isAlive(endpoint string) bool {
 //	ByName
 //	ByFunction
 // Only one Agent
-func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
+func (pl Platform) GetAgentsByFunctions(name string) ([][3]Addr, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
@@ -206,7 +206,7 @@ func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
 	if err != nil {
 		return nil, nil
 	}
-	response := make([]Agent, 0)
+	response := make([][3]Addr, 0)
 	for _, val := range agents {
 		agent, err := pl.LocateAgent(val)
 		if err != nil {

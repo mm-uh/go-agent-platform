@@ -49,11 +49,18 @@ paths:
           description: Name of the Function
       responses:
         '200':
-          description: Get the agent that represent the params
+          description: |
+            Get the agents endpoints([3]Addr) that represent the active agents that
+            follow the function name
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Agent'
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Addr'
+                  maxItems: 3
         default:
           description: unexpected error
           content:
