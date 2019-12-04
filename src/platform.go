@@ -3,7 +3,6 @@ package core
 import (
 	"bufio"
 	"fmt"
-	"google.golang.org/genproto/googleapis/ads/googleads/v1/errors"
 	"net"
 	"strconv"
 	"strings"
@@ -219,7 +218,10 @@ func (pl Platform) GetAgentsByFunctions(name string) ([][3]Addr, error) {
 
 // Return the name of the agents that are similar to this agent name
 func (pl Platform) GetSimilarToAgent(agentName string) []string {
-	agent, err := pl.LocateAgent(agentName)
+	var agent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+agentName, &agent)
 	if err != nil {
 		return nil
 	}
