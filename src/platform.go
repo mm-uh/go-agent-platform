@@ -225,6 +225,6 @@ func (pl Platform) GetSimilarToAgent(agentName string) []string {
 	if err != nil {
 		return nil
 	}
-	// agent.UpdateSimilar()
+	UpdateSimilarToAgent(&agent, &pl)
 	return agent.Similar
 }
