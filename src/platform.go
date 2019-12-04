@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Platform struct {
@@ -13,6 +15,7 @@ type Platform struct {
 const (
 	Name     = "Name"
 	Function = "Function"
+	IsAlive  = "IsAlive?"
 )
 
 func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
@@ -139,17 +142,56 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 // Get a specific agents matching a criteria, Should be one of next's:
 // criteria:
 //	ByName
-//	ByFunction
 // Only one Agent
-func (pl Platform) LocateAgent(name string) (Agent, error) {
+// Response reference:
+// Response Should contain 3 Addr
+// Response[0] Agent Addr
+// Response[1] Agent Is Alive endpoint Addr
+// Response[2] Agent Documentation Addr
+func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 	var agent Agent
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+name, &agent)
 	if err != nil {
-		return Agent{}, err
+		return [3]Addr{}, err
 	}
-	return agent, nil
+	addr := [3]Addr{}
+	for key, val := range agent.IsAliveService {
+		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+			addr[0] = getAddrFromStr(key)
+			addr[1] = val
+			doc, ok := agent.Documentation[key]
+			if ok {
+				addr[2] = doc
+			}
+			return addr, nil
+		}
+	}
+	return addr, fmt.Errorf("any node is alive")
+}
+
+func getAddrFromStr(s string) Addr {
+	a := strings.Split(s, ":")
+	port, err := strconv.Atoi(a[1])
+	if err != nil {
+		return Addr{}
+	}
+	return Addr{
+		Ip:   a[0],
+		Port: port,
+	}
+}
+
+// Check if agent is available
+// Send over a tcp connection a message 'Alive?\n'
+// Wait 5 seconds for response, that should be 'Yes\n'
+func isAlive(endpoint string) bool {
+	message, err := MakeRequest(endpoint, IsAlive)
+	if err != nil {
+		return false
+	}
+	return message == "Yes"
 }
 
 // Get a specific agents matching a criteria, Should be one of next's:
@@ -157,7 +199,7 @@ func (pl Platform) LocateAgent(name string) (Agent, error) {
 //	ByName
 //	ByFunction
 // Only one Agent
-func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
+func (pl Platform) GetAgentsByFunctions(name string) ([][3]Addr, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
@@ -165,7 +207,7 @@ func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
 	if err != nil {
 		return nil, nil
 	}
-	response := make([]Agent, 0)
+	response := make([][3]Addr, 0)
 	for _, val := range agents {
 		agent, err := pl.LocateAgent(val)
 		if err != nil {
@@ -178,10 +220,13 @@ func (pl Platform) GetAgentsByFunctions(name string) ([]Agent, error) {
 
 // Return the name of the agents that are similar to this agent name
 func (pl Platform) GetSimilarToAgent(agentName string) []string {
-	agent, err := pl.LocateAgent(agentName)
+	var agent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+agentName, &agent)
 	if err != nil {
 		return nil
 	}
-	// agent.UpdateSimilar()
+	UpdateSimilarToAgent(&agent, &pl)
 	return agent.Similar
 }

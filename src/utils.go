@@ -1,5 +1,10 @@
 package core
 
+import (
+	"fmt"
+	"net"
+)
+
 type Addr struct {
 	Ip   string
 	Port int
@@ -92,4 +97,35 @@ func Min(a, b int) int {
 		return b
 	}
 	return a
+}
+
+// Check if agent is available
+// Send over a tcp connection a message 'Alive?\n'
+// Wait 5 seconds for response, that should be 'Yes\n'
+func MakeRequest(endpoint, request string) (string, error) {
+
+	conn, err := net.Dial("tcp", endpoint)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	//err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	//if err != nil {
+	//	return "", err
+	//}
+
+	// send to socket
+	_, err = fmt.Fprintf(conn, request+"\n")
+	if err != nil {
+		return "", err
+	}
+	buff := make([]byte, 1024)
+	n, err := conn.Read(buff)
+	fmt.Println(string(buff))
+	//fmt.Println("NNNNNN ", n)
+	if err != nil {
+		return "", err
+	}
+	//buff[n+1] = 0
+	return string(buff[:n]), nil
 }
