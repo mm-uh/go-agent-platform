@@ -137,7 +137,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Agent'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Addr'
         default:
           description: unexpected error
           content:

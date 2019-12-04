@@ -3,6 +3,7 @@ package core
 import (
 	"bufio"
 	"fmt"
+	"google.golang.org/genproto/googleapis/ads/googleads/v1/errors"
 	"net"
 	"strconv"
 	"strings"
@@ -130,27 +131,27 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 // Response[0] Agent Addr
 // Response[1] Agent Is Alive endpoint Addr
 // Response[2] Agent Documentation Addr
-func (pl Platform) LocateAgent(name string) ([]Addr, error) {
+func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 	var agent Agent
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+name, &agent)
 	if err != nil {
-		return nil, err
+		return [3]Addr{}, err
 	}
-	addr := make([]Addr, 0)
+	addr := [3]Addr{}
 	for key, val := range agent.IsAliveService {
 		if isAlive(key) {
-			addr = append(addr, val)
-			addr = append(addr, getAddrFromStr(key))
+			addr[0] =  val
+			addr[1] = getAddrFromStr(key)
 			doc, ok := agent.Documentation[val.Ip+":"+strconv.Itoa(val.Port)]
 			if ok {
-				addr = append(addr, doc)
+				addr[2] = doc
 			}
 			return addr, nil
 		}
 	}
-	return addr, nil
+	return addr, fmt.Errorf("any node is alive")
 }
 
 func getAddrFromStr(s string) Addr {
