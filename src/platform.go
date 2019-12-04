@@ -1,6 +1,13 @@
 package core
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"time"
+)
 
 type Platform struct {
 	Addr     Addr
@@ -117,17 +124,72 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 // Get a specific agents matching a criteria, Should be one of next's:
 // criteria:
 //	ByName
-//	ByFunction
 // Only one Agent
-func (pl Platform) LocateAgent(name string) (Agent, error) {
+// Response reference:
+// Response Should contain 3 Addr
+// Response[0] Agent Addr
+// Response[1] Agent Is Alive endpoint Addr
+// Response[2] Agent Documentation Addr
+func (pl Platform) LocateAgent(name string) ([]Addr, error) {
 	var agent Agent
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+name, &agent)
 	if err != nil {
-		return Agent{}, err
+		return nil, err
 	}
-	return agent, nil
+	addr := make([]Addr, 0)
+	for key, val := range agent.IsAliveService {
+		if isAlive(key) {
+			addr = append(addr, val)
+			addr = append(addr, getAddrFromStr(key))
+			doc, ok := agent.Documentation[val.Ip+":"+strconv.Itoa(val.Port)]
+			if ok {
+				addr = append(addr, doc)
+			}
+			return addr, nil
+		}
+	}
+	return addr, nil
+}
+
+func getAddrFromStr(s string) Addr {
+	a := strings.Split(s, ":")
+	port, err := strconv.Atoi(a[1])
+	if err != nil {
+		return Addr{}
+	}
+	return Addr{
+		Ip:   a[0],
+		Port: port,
+	}
+}
+
+// Check if agent is available
+// Send over a tcp connection a message 'Alive?\n'
+// Wait 5 seconds for response, that should be 'Yes\n'
+func isAlive(endpoint string) bool {
+
+	conn, err := net.Dial("tcp", endpoint)
+	if err != nil {
+		return false
+	}
+	err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	if err != nil {
+		return false
+	}
+	text := "Alive?"
+	// send to socket
+	_, err = fmt.Fprintf(conn, text+"\n")
+	if err != nil {
+		return false
+	}
+
+	message, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return false
+	}
+	return message == "Yes\n"
 }
 
 // Get a specific agents matching a criteria, Should be one of next's:
