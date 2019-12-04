@@ -140,6 +140,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Addr'
+                maxItems: 3
         default:
           description: unexpected error
           content:
