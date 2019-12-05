@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/http"
@@ -209,6 +210,7 @@ func (server ServerHttp) HandleAgentsNames(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = io.WriteString(w, string(response))
 	if err != nil {
 		msg := "Couldn't send response"
@@ -231,6 +233,7 @@ func (server ServerHttp) HandleGetPeers(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
 		msg := "Couldn't send response"
@@ -281,6 +284,13 @@ func (server ServerHttp) HandleRegisterAgent(w http.ResponseWriter, r *http.Requ
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+	_, err = w.Write([]byte("ok"))
+	if err != nil {
+		msg := "Couldn't send response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
@@ -299,12 +309,13 @@ func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
 	api.HandleFunc("/getPeers", server.HandleGetPeers).Methods(http.MethodGet)
 	api.HandleFunc("/registerAgent", server.HandleRegisterAgent).Methods(http.MethodPost)
 	api.HandleFunc("/getAllAgentsNames", server.HandleAgentsNames).Methods(http.MethodGet)
-	api.HandleFunc("/getAgentsForFunction/{Name}", server.HandleGetAgentsFunctions).Methods(http.MethodPost)
-	api.HandleFunc("/getSimilarAgents/{Name}", server.HandleGetSimilarAgents).Methods(http.MethodPost)
+	api.HandleFunc("/getAgentsForFunction/{Name}", server.HandleGetAgentsFunctions).Methods(http.MethodGet)
+	api.HandleFunc("/getSimilarAgents/{Name}", server.HandleGetSimilarAgents).Methods(http.MethodGet)
 
 	return server
 }
 
 func (server *ServerHttp) RunServer() {
+	logrus.Info("Running server in " + server.ip + ":" + strconv.FormatInt(int64(server.port), 10))
 	log.Fatal(http.ListenAndServe(server.ip+":"+strconv.FormatInt(int64(server.port), 10), &server.router))
 }
