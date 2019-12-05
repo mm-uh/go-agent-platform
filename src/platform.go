@@ -187,7 +187,7 @@ func isAlive(endpoint string) bool {
 	if err != nil {
 		return false
 	}
-	return message == "Yes\n"
+	return message == "Yes"
 }
 
 // Get a specific agents matching a criteria, Should be one of next's:

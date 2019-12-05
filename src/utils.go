@@ -1,10 +1,8 @@
 package core
 
 import (
-	"bufio"
 	"fmt"
 	"net"
-	"time"
 )
 
 type Addr struct {
@@ -41,6 +39,9 @@ func AddWord(trie *Trie, word string) *Trie {
 		newChild.Value = word[0]
 	} else {
 		newChild = AddWord(&child, word[1:])
+	}
+	if trie.Childrens == nil {
+		trie.Childrens = make(map[byte]Trie)
 	}
 	trie.Childrens[word[0]] = *newChild
 	return trie
@@ -109,20 +110,24 @@ func MakeRequest(endpoint, request string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = conn.SetDeadline(time.Now().Add(5 * time.Second))
-	if err != nil {
-		return "", err
-	}
+	defer conn.Close()
+	//err = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	//if err != nil {
+	//	return "", err
+	//}
 
 	// send to socket
 	_, err = fmt.Fprintf(conn, request+"\n")
 	if err != nil {
 		return "", err
 	}
-
-	message, err := bufio.NewReader(conn).ReadString('\n')
+	buff := make([]byte, 1024)
+	n, err := conn.Read(buff)
+	fmt.Println(string(buff))
+	//fmt.Println("NNNNNN ", n)
 	if err != nil {
 		return "", err
 	}
-	return message, nil
+	//buff[n+1] = 0
+	return string(buff[:n]), nil
 }
