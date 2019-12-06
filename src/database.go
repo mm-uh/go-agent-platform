@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	kademlia "github.com/mm-uh/go-kademlia/src"
@@ -79,6 +80,7 @@ func (db *DatabaseAndPexBasedOnKademlia) GetPeers() []Addr {
 	}
 
 	answ := make([]Addr, 0)
+	fmt.Println("NODES ", nodes)
 	for _, node := range nodes {
 		data, err := node.Get(db.Kd.GetContactInformation(), &id)
 		if err != nil {
