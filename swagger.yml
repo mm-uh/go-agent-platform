@@ -110,6 +110,24 @@ paths:
           in: body
           schema:
             $ref: '#/definitions/Agent'
+  /editAgent:
+    post:
+      description: Edit a registered Agent in the platform
+      operationId: editAgent
+      responses:
+        '200':
+          description: Agent edited
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - description: Agent to edit
+          required: true
+          name: body
+          in: body
+          schema:
+            $ref: '#/definitions/Agent'
   '/getAgent/{Name}':
     get:
       description: Get the agent that follow a simple criteria
