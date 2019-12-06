@@ -219,6 +219,30 @@ func (server ServerHttp) HandleAgentsNames(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// [GET] Get all functions registered in the platform
+func (server ServerHttp) HandleFunctionsNames(w http.ResponseWriter, r *http.Request) {
+	agentsNames, err := server.pl.GetAllFunctionNames()
+	if err != nil {
+		msg := "Couldn't get all agents names"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(agentsNames)
+	if err != nil {
+		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = io.WriteString(w, string(response))
+	if err != nil {
+		msg := "Couldn't send response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+}
+
 // [GET] Get all agents registered in the platform
 func (server ServerHttp) HandleGetPeers(w http.ResponseWriter, r *http.Request) {
 	peers := server.pl.Pex.GetPeers()
@@ -293,6 +317,114 @@ func (server ServerHttp) HandleRegisterAgent(w http.ResponseWriter, r *http.Requ
 
 }
 
+// [POST] Add endpoints
+func (server ServerHttp) HandleAddEndpoints(w http.ResponseWriter, r *http.Request) {
+	// If the Content-Type header is present, check that it has the value
+	// application/json.
+	if r.Header.Get("Content-Type") != "" {
+		value, _ := header.ParseValueAndParams(r.Header, "Content-Type")
+		if value != "application/json" {
+			msg := "Content-Type header is not application/json"
+			http.Error(w, msg, http.StatusUnsupportedMediaType)
+			return
+		}
+	}
+
+	// Use http.MaxBytesReader to enforce a maximum read of 1MB from the
+	// response body.
+	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+
+	// Setup the decoder and call the DisallowUnknownFields() method on it.
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+
+	var agent UpdaterAgent
+	err := dec.Decode(&agent)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	// Check that the request body only contained a single JSON object.
+	if dec.More() {
+		msg := "Request body must only contain a single JSON object"
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	err = server.pl.AddEndpoints(agent)
+	if err != nil {
+		msg := "Request body must only contain a single JSON object"
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	_, err = w.Write([]byte("ok"))
+	if err != nil {
+		msg := "Couldn't send response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+}
+
+// [POST] RecoverAgent
+func (server ServerHttp) HandleRecoverAgent(w http.ResponseWriter, r *http.Request) {
+	// If the Content-Type header is present, check that it has the value
+	// application/json.
+	if r.Header.Get("Content-Type") != "" {
+		value, _ := header.ParseValueAndParams(r.Header, "Content-Type")
+		if value != "application/json" {
+			msg := "Content-Type header is not application/json"
+			http.Error(w, msg, http.StatusUnsupportedMediaType)
+			return
+		}
+	}
+
+	// Use http.MaxBytesReader to enforce a maximum read of 1MB from the
+	// response body.
+	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+
+	// Setup the decoder and call the DisallowUnknownFields() method on it.
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+
+	var recoverAgent RecoverAgent
+	err := dec.Decode(&recoverAgent)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	// Check that the request body only contained a single JSON object.
+	if dec.More() {
+		msg := "Request body must only contain a single JSON object"
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	agent, err := server.pl.RecoverAgent(recoverAgent)
+	if err != nil {
+		msg := "Request body must only contain a single JSON object"
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	response, err := json.Marshal(agent)
+	if err != nil {
+		msg := "Couldn't marshal response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(response)
+	if err != nil {
+		msg := "Couldn't send response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+}
+
 // [POST] Register Agent
 func (server ServerHttp) HandleEditAgent(w http.ResponseWriter, r *http.Request) {
 	// If the Content-Type header is present, check that it has the value
@@ -359,8 +491,11 @@ func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
 	api.HandleFunc("/getAgent/{Name}", server.HandleGetAgent).Methods(http.MethodGet)
 	api.HandleFunc("/getPeers", server.HandleGetPeers).Methods(http.MethodGet)
 	api.HandleFunc("/registerAgent", server.HandleRegisterAgent).Methods(http.MethodPost)
+	api.HandleFunc("/addEndpoints", server.HandleAddEndpoints).Methods(http.MethodPost)
+	api.HandleFunc("/recoverAgent", server.HandleRecoverAgent).Methods(http.MethodPost)
 	api.HandleFunc("/editAgent", server.HandleEditAgent).Methods(http.MethodPost)
 	api.HandleFunc("/getAllAgentsNames", server.HandleAgentsNames).Methods(http.MethodGet)
+	api.HandleFunc("/getAllFunctionsNames", server.HandleFunctionsNames).Methods(http.MethodGet)
 	api.HandleFunc("/getAgentsForFunction/{Name}", server.HandleGetAgentsFunctions).Methods(http.MethodGet)
 	api.HandleFunc("/getSimilarAgents/{Name}", server.HandleGetSimilarAgents).Methods(http.MethodGet)
 
