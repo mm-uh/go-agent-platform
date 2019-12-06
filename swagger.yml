@@ -50,10 +50,7 @@ paths:
           schema:
             type: array
             items:
-              type: array
-              items:
-                $ref: '#/definitions/Addr'
-              maxItems: 3
+              type: string
         default:
           description: unexpected error
           schema:

@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mm-uh/rpc_udp/src/util"
 	"github.com/sirupsen/logrus"
@@ -314,9 +315,9 @@ func (kc *RemoteKademlia) MakeRequest(rpcBase *util.RPCBase) (*util.ResponseRPC,
 		return nil, err
 	}
 
-	// timeout := 30 * time.Second
-	// deadline := time.Now().Add(timeout)
-	// err = conn.SetReadDeadline(deadline)
+	timeout := 5 * time.Second
+	deadline := time.Now().Add(timeout)
+	err = conn.SetReadDeadline(deadline)
 	if err != nil {
 		return nil, err
 	}
