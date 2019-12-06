@@ -255,7 +255,7 @@ func NodeIsAlive(endpoint string) bool {
 //	ByName
 //	ByFunction
 // Only one Agent
-func (pl Platform) GetAgentsByFunctions(name string) ([][3]Addr, error) {
+func (pl Platform) GetAgentsByFunctions(name string) ([]string, error) {
 	var agents []string
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
@@ -263,15 +263,7 @@ func (pl Platform) GetAgentsByFunctions(name string) ([][3]Addr, error) {
 	if err != nil {
 		return nil, nil
 	}
-	response := make([][3]Addr, 0)
-	for _, val := range agents {
-		agent, err := pl.LocateAgent(val)
-		if err != nil {
-			continue
-		}
-		response = append(response, agent)
-	}
-	return response, nil
+	return agents, nil
 }
 
 // Return the name of the agents that are similar to this agent name
