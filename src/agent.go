@@ -97,7 +97,7 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 func AreCompatibles(tempAgent , agent *Agent) bool {
 	for key, val := range tempAgent.IsAliveService {
 		// get if the endpoint is alive
-		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
 			accepted := 0
 			// Check that all test cases follow the criteria
 			for _, testCase := range agent.TestCases {

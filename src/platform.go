@@ -154,7 +154,7 @@ func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 	}
 	addr := [3]Addr{}
 	for key, val := range agent.IsAliveService {
-		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
 			addr[0] = getAddrFromStr(key)
 			addr[1] = val
 			doc, ok := agent.Documentation[key]
@@ -182,7 +182,7 @@ func getAddrFromStr(s string) Addr {
 // Check if agent is available
 // Send over a tcp connection a message 'Alive?\n'
 // Wait 5 seconds for response, that should be 'Yes\n'
-func isAlive(endpoint string) bool {
+func NodeIsAlive(endpoint string) bool {
 	message, err := MakeRequest(endpoint, IsAlive)
 	if err != nil {
 		return false
