@@ -23,7 +23,9 @@ paths:
         '200':
           description: Get the agent that are similar
           schema:
-            $ref: '#/definitions/Agent'
+            type: array
+            items:
+              type: string
         default:
           description: unexpected error
           schema:
@@ -73,6 +75,23 @@ paths:
           schema:
             $ref: '#/definitions/Error'
       parameters: []
+  /getAllFunctionsNames:
+    get:
+      description: |
+        Get all functions names registered in the platforms
+      operationId: getFunctionsNames
+      responses:
+        '200':
+          description: get all functions
+          schema:
+            type: array
+            items:
+              type: string
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters: []
   /getPeers:
     get:
       description: |
@@ -103,6 +122,62 @@ paths:
             $ref: '#/definitions/Error'
       parameters:
         - description: Agent to register
+          required: true
+          name: body
+          in: body
+          schema:
+            $ref: '#/definitions/Agent'
+  /addEndpoints:
+    post:
+      description: Add endpoints to an agent in the platform
+      operationId: addEndpoints
+      responses:
+        '200':
+          description: Endpoints added
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - description: Endpoints to add
+          required: true
+          name: body
+          in: body
+          schema:
+            $ref: '#/definitions/UpdaterAgent'
+  /recoverAgent:
+    post:
+      description: Recover an agent in the platform
+      operationId: recoverAgent
+      responses:
+        '200':
+          description: Agent returned
+          schema:
+            $ref: '#/definitions/Agent'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - description: Recover agent params
+          required: true
+          name: body
+          in: body
+          schema:
+            $ref: '#/definitions/RecoverAgent'
+  /editAgent:
+    post:
+      description: Edit a registered Agent in the platform
+      operationId: editAgent
+      responses:
+        '200':
+          description: Agent edited
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      parameters:
+        - description: Agent to edit
           required: true
           name: body
           in: body
@@ -150,6 +225,15 @@ definitions:
       Port:
         type: integer
         format: int64
+  RecoverAgent:
+    type: object
+    required:
+      - name
+    properties:
+      Name:
+        type: string
+      Password:
+        type: string
   Agent:
     type: object
     required:
@@ -158,6 +242,8 @@ definitions:
       Name:
         type: string
       Function:
+        type: string
+      Password:
         type: string
       EndpointService:
         type: array
@@ -175,6 +261,27 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TestCase'
+  UpdaterAgent:
+    type: object
+    required:
+      - name
+    properties:
+      Name:
+        type: string
+      Password:
+        type: string
+      EndpointService:
+        type: array
+        items:
+          $ref: '#/definitions/Addr'
+      IsAliveService:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/Addr'
+      Documentation:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/Addr'
   Error:
     type: object
     required:

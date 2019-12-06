@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -24,6 +25,24 @@ func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
 		DataBase: db,
 		Pex:      pex,
 	}
+}
+
+func (pl Platform) EditAgent(agent *Agent) bool {
+	var tmpAgent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+agent.Name, &agent)
+	if err != nil {
+		return false
+	}
+	if agent.Password != tmpAgent.Password {
+		return false
+	}
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), tmpAgent)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func (pl Platform) Register(agent *Agent) bool {
@@ -139,6 +158,21 @@ func (pl Platform) GetAllAgentsNames() ([]string, error) {
 	return GetAllWords(&agentsNames), nil
 }
 
+// Get all agents location Matching a criteria, Should be one of next's:
+// criteria:
+//	ByName: Only 0 or 1 Agent should exits if we have this criteria
+//	ByFunction: As many as agents in our platform
+func (pl Platform) GetAllFunctionNames() ([]string, error) {
+	var functionsNames Trie
+	// Should return a []string in agentsNames
+	// Represent all agents names
+	err := pl.DataBase.Get(Function, &functionsNames)
+	if err != nil {
+		return nil, err
+	}
+	return GetAllWords(&functionsNames), nil
+}
+
 // Get a specific agents matching a criteria, Should be one of next's:
 // criteria:
 //	ByName
@@ -158,7 +192,7 @@ func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 	}
 	addr := [3]Addr{}
 	for key, val := range agent.IsAliveService {
-		if isAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
+		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
 			addr[0] = getAddrFromStr(key)
 			addr[1] = val
 			doc, ok := agent.Documentation[key]
@@ -169,6 +203,32 @@ func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
 		}
 	}
 	return addr, fmt.Errorf("any node is alive")
+}
+
+type RecoverAgent struct {
+	Name     string
+	Password string
+}
+
+// Recover an agent
+func (pl Platform) RecoverAgent(recover RecoverAgent) (Agent, error) {
+	var agent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+recover.Name, &agent)
+	if err != nil {
+		return Agent{}, err
+	}
+
+	if IsAuthenticated(recover.Password, &agent) {
+		err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+		if err  != nil {
+			return Agent{}, err
+		}
+		return agent, nil
+	}
+
+	return Agent{}, errors.New("error recovering agent")
 }
 
 func getAddrFromStr(s string) Addr {
@@ -186,7 +246,7 @@ func getAddrFromStr(s string) Addr {
 // Check if agent is available
 // Send over a tcp connection a message 'Alive?\n'
 // Wait 5 seconds for response, that should be 'Yes\n'
-func isAlive(endpoint string) bool {
+func NodeIsAlive(endpoint string) bool {
 	message, err := MakeRequest(endpoint, IsAlive)
 	if err != nil {
 		return false
@@ -225,8 +285,49 @@ func (pl Platform) GetSimilarToAgent(agentName string) []string {
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+agentName, &agent)
 	if err != nil {
-		return nil
+		return []string{}
 	}
 	UpdateSimilarToAgent(&agent, &pl)
 	return agent.Similar
+}
+
+type UpdaterAgent struct {
+	Name     string
+	Password string
+
+	NewEndpointAddr []Addr
+	NewIsAliveAddr  map[string]Addr
+	NewDocAddr      map[string]Addr
+}
+
+// Return the name of the agents that are similar to this agent name
+func (pl Platform) AddEndpoints(agentUpdated UpdaterAgent) error {
+	var agent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+agentUpdated.Name, &agent)
+	if err != nil {
+		return err
+	}
+	if IsAuthenticated(agentUpdated.Password, &agent) {
+		agent.EndpointService = Union(agent.EndpointService, agentUpdated.NewEndpointAddr)
+		for k, v := range agentUpdated.NewDocAddr {
+			agent.Documentation[k] = v
+		}
+		for k, v := range agentUpdated.NewIsAliveAddr {
+			agent.IsAliveService[k] = v
+		}
+	}
+
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+	if err != nil {
+		return err
+	}
+
+	go UpdateSimilarToAgent(&agent, &pl)
+	return nil
+}
+
+func IsAuthenticated(updatedAgentPassword string, agent2 *Agent) bool {
+	return updatedAgentPassword == agent2.Password
 }
