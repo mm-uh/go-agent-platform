@@ -8,6 +8,7 @@ import (
 type Agent struct {
 	Name     string
 	Function string
+	Password string
 
 	EndpointService []Addr
 	IsAliveService  map[string]Addr
@@ -16,10 +17,11 @@ type Agent struct {
 	TestCases       []TestCase
 }
 
-func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[string]Addr, testCases []TestCase) *Agent {
+func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[string]Addr, testCases []TestCase, password string) *Agent {
 	agent := &Agent{
 		Name:            name,
 		Function:        functionality,
+		Password:        password,
 		EndpointService: endpoints,
 		IsAliveService:  alive,
 		Documentation:   doc,
@@ -65,11 +67,11 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 			continue
 		}
 		if AreCompatibles(&tempAgent, agent) {
-			err := platform.DataBase.Lock(Name+":"+val)
+			err := platform.DataBase.Lock(Name + ":" + val)
 			if err != nil {
 				continue
 			}
-			defer unlockKey(Name+":"+val)
+			defer unlockKey(Name + ":" + val)
 			tempAgent.Similar = append(tempAgent.Similar, val)
 			err = platform.DataBase.Store(Name+":"+val, &tempAgent)
 			if err != nil {
@@ -81,12 +83,12 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 		}
 	}
 	if similar != len(agent.Similar) {
-		err := platform.DataBase.Lock(Name+":"+agent.Name)
+		err := platform.DataBase.Lock(Name + ":" + agent.Name)
 		if err != nil {
 			logrus.Warn("Couldn't store agent")
 			return
 		}
-		defer unlockKey(Name+":"+agent.Name)
+		defer unlockKey(Name + ":" + agent.Name)
 		err = platform.DataBase.Store(Name+":"+agent.Name, &agent)
 		if err != nil {
 			logrus.Warn("Couldn't store agent")
@@ -94,7 +96,7 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 	}
 }
 
-func AreCompatibles(tempAgent , agent *Agent) bool {
+func AreCompatibles(tempAgent, agent *Agent) bool {
 	for key, val := range tempAgent.IsAliveService {
 		// get if the endpoint is alive
 		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {

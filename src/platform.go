@@ -26,6 +26,24 @@ func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
 	}
 }
 
+func (pl Platform) EditAgent(agent *Agent) bool {
+	var tmpAgent Agent
+	// Here we follow the indexation criteria:
+	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
+	err := pl.DataBase.Get(Name+":"+agent.Name, &agent)
+	if err != nil {
+		return false
+	}
+	if agent.Password != tmpAgent.Password {
+		return false
+	}
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func (pl Platform) Register(agent *Agent) bool {
 	names := &Trie{}
 	unlockKey := func(key string) {

@@ -23,7 +23,9 @@ paths:
         '200':
           description: Get the agent that are similar
           schema:
-            $ref: '#/definitions/Agent'
+            type: array
+            items:
+              type: string
         default:
           description: unexpected error
           schema:
@@ -158,6 +160,8 @@ definitions:
       Name:
         type: string
       Function:
+        type: string
+      Password:
         type: string
       EndpointService:
         type: array
