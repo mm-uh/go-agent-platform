@@ -55,6 +55,9 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 		return
 	}
 	for _, val := range agents {
+		if val == agent.Name {
+			continue
+		}
 		var tempAgent Agent
 		// Get Agents with the same function
 		err := platform.DataBase.Get(Name+":"+val, &tempAgent)

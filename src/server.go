@@ -210,6 +210,7 @@ func (server ServerHttp) HandleAgentsNames(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = io.WriteString(w, string(response))
 	if err != nil {
 		msg := "Couldn't send response"
@@ -232,6 +233,7 @@ func (server ServerHttp) HandleGetPeers(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
 		msg := "Couldn't send response"
@@ -282,6 +284,13 @@ func (server ServerHttp) HandleRegisterAgent(w http.ResponseWriter, r *http.Requ
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+	_, err = w.Write([]byte("ok"))
+	if err != nil {
+		msg := "Couldn't send response"
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func NewServer(prefix string, platform Platform, addr Addr) *ServerHttp {
