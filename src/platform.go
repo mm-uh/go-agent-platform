@@ -295,9 +295,9 @@ type UpdaterAgent struct {
 	Name     string
 	Password string
 
-	NewEndpointAddr []Addr
-	NewIsAliveAddr  map[string]Addr
-	NewDocAddr      map[string]Addr
+	EndpointService []Addr
+	IsAliveService  map[string]Addr
+	Documentation     map[string]Addr
 }
 
 // Return the name of the agents that are similar to this agent name
@@ -307,14 +307,15 @@ func (pl Platform) AddEndpoints(agentUpdated UpdaterAgent) error {
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+agentUpdated.Name, &agent)
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 	if IsAuthenticated(agentUpdated.Password, &agent) {
-		agent.EndpointService = Union(agent.EndpointService, agentUpdated.NewEndpointAddr)
-		for k, v := range agentUpdated.NewDocAddr {
+		agent.EndpointService = Union(agent.EndpointService, agentUpdated.EndpointService)
+		for k, v := range agentUpdated.Documentation {
 			agent.Documentation[k] = v
 		}
-		for k, v := range agentUpdated.NewIsAliveAddr {
+		for k, v := range agentUpdated.IsAliveService {
 			agent.IsAliveService[k] = v
 		}
 	}
