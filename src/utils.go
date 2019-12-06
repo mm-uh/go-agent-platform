@@ -131,3 +131,18 @@ func MakeRequest(endpoint, request string) (string, error) {
 	//buff[n+1] = 0
 	return string(buff[:n]), nil
 }
+
+func Union(a, b []Addr) []Addr {
+	m := make(map[Addr]bool)
+
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		if _, ok := m[item]; !ok {
+			a = append(a, item)
+		}
+	}
+	return a
+}
