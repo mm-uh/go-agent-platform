@@ -47,6 +47,7 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 	}
 	if agent.Similar == nil {
 		similar = 0
+		agent.Similar = make([]string, 0)
 	} else {
 		similar = len(agent.Similar)
 	}

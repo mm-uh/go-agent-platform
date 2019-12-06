@@ -239,7 +239,7 @@ func (pl Platform) GetSimilarToAgent(agentName string) []string {
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+agentName, &agent)
 	if err != nil {
-		return nil
+		return []string{}
 	}
 	UpdateSimilarToAgent(&agent, &pl)
 	return agent.Similar
