@@ -3,11 +3,10 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/mm-uh/rpc_udp/src/util"
 	"net"
 	"reflect"
 
+	"github.com/mm-uh/rpc_udp/src/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +27,7 @@ func NewServer(i interface{}, addr string) *Server {
 
 // Call methods associated to Server.caller using reflection
 func (server *Server) callMethod(methodName string, args interface{}) (string, error) {
-	logrus.Info("Calling method dynamically")
+	//logrus.Info("Calling method dynamically")
 
 	var ptr, value, finalMethod reflect.Value
 
@@ -94,8 +93,6 @@ func (server *Server) callMethod(methodName string, args interface{}) (string, e
 
 // Handle the rpc call of methods
 func (server *Server) handleOptions(pc net.PacketConn, addr net.Addr, buf []byte, n int) {
-	fmt.Println("Handle options")
-
 	var requestRPCCall util.RPCBase
 	err := json.Unmarshal(buf[:n], &requestRPCCall)
 	if err != nil {
@@ -121,13 +118,13 @@ func (server *Server) handleOptions(pc net.PacketConn, addr net.Addr, buf []byte
 		logrus.Error("Couldn't send buffer " + err.Error())
 		return
 	}
-	logrus.Info("Successfully handled")
+
 }
 
 // Listen in server.addr for calls of the rpc
 // Recive as params a channel that handle when we get a error
 func (server *Server) ListenServer(exit chan bool) {
-	logrus.Info("Listen server at " + server.addr)
+	//logrus.Info("Listen server at " + server.addr)
 	pc, err := net.ListenPacket("udp", server.addr)
 	if err != nil {
 		logrus.Fatal(err)

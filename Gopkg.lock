@@ -35,22 +35,22 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:c2da1510d9f6167c4245988ba2a38b21815b6f40723974f1b8f1a15cf6f30851"
+  digest = "1:194ef57869c51dce0abdce39f408a8e047694e3951f277c122e4356853e48ad1"
   name = "github.com/mm-uh/go-kademlia"
   packages = ["src"]
   pruneopts = "UT"
-  revision = "03eeaf86135d60cc4bf3b71ea4d61f3532aa7a09"
+  revision = "4fcb2c8b994480f5ca846fcd3a81f5e605a5feb5"
 
 [[projects]]
   branch = "master"
-  digest = "1:c18326abc56f80e6bcbb1507b4bb305bee6e62eb3ad7ad400e84284b381c968a"
+  digest = "1:123b1af2c7abd5941ef719202d1627ec76386137298bcb80fe2b88a0ef2ad416"
   name = "github.com/mm-uh/rpc_udp"
   packages = [
     "src/server",
     "src/util",
   ]
   pruneopts = "UT"
-  revision = "ea3c8d27959791dec3d6af7d135b91aabea75ef7"
+  revision = "35ee59a6fcdb3a7f4198ba100ce65f1ebefaebaa"
 
 [[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
@@ -62,11 +62,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4da420ceda5f68e8d748aa2169d0ed44ffadb1bbd6537cf778a49563104189b8"
+  digest = "1:ba6d732e405a774883c0bf5d4fc977a1606968bd0b518552645160d50b73a69c"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "ce4227a45e2eb77e5c847278dcc6a626742e2945"
+  revision = "eeba5f6aabab6d6594a9191d6bfeaca5fa6a8248"
 
 [solve-meta]
   analyzer-name = "dep"
