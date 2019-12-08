@@ -29,6 +29,8 @@ deploy:
   provider: releases
   api_key:
     secure: lteKf72tE5IS2m5yPgmKXiwDOxtvSkA7ocQFmSwMFJ+ZbmG9DuTbZYTFwihGazMNm1M+IpNybVGqfmeKPW4bh99e8b+XD0QNmbIjw83qPDKwguGZ5G+IdyHH+fJFcsZscZTEpNpEI2Fn/5qP2KMZLGKdi+ySx7K0ntGyaO0yD7udZxeo0orLOvO2137mp100lYfYrJ4Rvwx8LICrl+I1nd6T8+ZGzAWAZ9rpou8N5oH730DPtMpPwMtIYANgYzCUP+ohDgpk78SgB4PgD/0ZSmY/uTDbjOwZ0uBxGGbjM+hJbkmP1auFqybEr+L+NHMyqF90f2k7YSOaHOnsXpwLrMzahw0K5Ui/eZdOAweH97CdkpOyXW/4kUxH/Qv8FlMaoUslcEbPl4gVoKCO9pOA79RmPIMyf/tQ/v609j/+ZLhPw8cHK0Ux4spMaFTz4cdYuid5OghdULcOpATzFBmLx7W28vTxk0RzfDN2NkIajWNHqXgYB2kgmZ8Zgn/L80gp95qiO+cPrIdx/Quz0SofZjWME4nFM58EWd317BD/CySqAjM0XzQAKlD5P/xRcX6DIhlkNlg9pYQuCeX6F3b8ZrOLBTl3xAsRGxbhceN/uTfNGQvlhkn9x0+m+iZdN+WDcGSLef/x7iCWOt7QZlhAp84m3aUPR/V5631a/EN8WwE=
+  skip_cleanup: true
+  skip_existing: true
   file: go-agent-platform.tar.gz
   on:
     tags: true
