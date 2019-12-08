@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -14,9 +15,10 @@ type Platform struct {
 }
 
 const (
-	Name     = "Name"
-	Function = "Function"
-	IsAlive  = "IsAlive?"
+	Name       = "Name"
+	Function   = "Function"
+	IsAlive    = "IsAlive?"
+	PlatformId = "PlatformId"
 )
 
 func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
@@ -25,6 +27,48 @@ func NewPlatform(addr Addr, db DataBase, pex Pex) *Platform {
 		DataBase: db,
 		Pex:      pex,
 	}
+}
+
+func (pl Platform) ListenBroadcast(port, portForConnect int) {
+	var response string = ""
+	for {
+
+		err := pl.DataBase.Get(PlatformId, &response)
+		if err != nil {
+			continue
+		}
+		break
+	}
+	response = fmt.Sprintf("%s:%s:%d:", response, pl.Addr.Ip, portForConnect)
+	p := strconv.Itoa(port)
+	addr, err := net.ResolveUDPAddr("udp", ":"+p)
+	if err != nil {
+		return
+	}
+
+	conn, err := net.ListenUDP("udp", addr)
+
+	if err != nil {
+		return
+	}
+
+	for {
+		request := make([]byte, 1024)
+		_, from, err := conn.ReadFromUDP(request)
+		if err != nil {
+			continue
+		}
+
+		if string(request)[:4] == "JOIN" {
+			_, err := conn.WriteToUDP([]byte(response), from)
+			if err != nil {
+				continue
+			}
+
+		}
+
+	}
+
 }
 
 func (pl Platform) EditAgent(agent *Agent) bool {
@@ -222,7 +266,7 @@ func (pl Platform) RecoverAgent(recover RecoverAgent) (Agent, error) {
 
 	if IsAuthenticated(recover.Password, &agent) {
 		err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
-		if err  != nil {
+		if err != nil {
 			return Agent{}, err
 		}
 		return agent, nil
@@ -261,12 +305,14 @@ func NodeIsAlive(endpoint string) bool {
 // Only one Agent
 func (pl Platform) GetAgentsByFunctions(name string) ([]string, error) {
 	var agents []string
+
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Function+":"+name, &agents)
 	if err != nil {
 		return nil, nil
 	}
+
 	return agents, nil
 }
 
@@ -280,6 +326,7 @@ func (pl Platform) GetSimilarToAgent(agentName string) []string {
 		return []string{}
 	}
 	UpdateSimilarToAgent(&agent, &pl)
+
 	return agent.Similar
 }
 
@@ -289,7 +336,7 @@ type UpdaterAgent struct {
 
 	EndpointService []Addr
 	IsAliveService  map[string]Addr
-	Documentation     map[string]Addr
+	Documentation   map[string]Addr
 }
 
 // Return the name of the agents that are similar to this agent name
@@ -299,7 +346,7 @@ func (pl Platform) AddEndpoints(agentUpdated UpdaterAgent) error {
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
 	err := pl.DataBase.Get(Name+":"+agentUpdated.Name, &agent)
 	if err != nil {
-		fmt.Println(err.Error())
+
 		return err
 	}
 	if IsAuthenticated(agentUpdated.Password, &agent) {

@@ -177,6 +177,7 @@ func (server ServerHttp) HandleGetAgentsFunctions(w http.ResponseWriter, r *http
 			return
 		}
 		response, err := json.Marshal(agents)
+		fmt.Println("RESPONSE ", agents)
 		if err != nil {
 			msg := "Couldn't marshal response"
 			http.Error(w, msg, http.StatusInternalServerError)

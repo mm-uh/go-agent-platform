@@ -1,8 +1,10 @@
 package core
 
 import (
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Agent struct {
@@ -67,20 +69,22 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 		if err != nil {
 			continue
 		}
-		if AreCompatibles(&tempAgent, agent) {
+		if AreCompatibles(agent, &tempAgent) {
 			err := platform.DataBase.Lock(Name + ":" + val)
 			if err != nil {
 				continue
 			}
 			defer unlockKey(Name + ":" + val)
 			tempAgent.Similar = append(tempAgent.Similar, val)
+			fmt.Println("HERE ", tempAgent.Similar)
 			err = platform.DataBase.Store(Name+":"+val, &tempAgent)
 			if err != nil {
 				continue
 			}
 		}
-		if AreCompatibles(agent, &tempAgent) {
+		if AreCompatibles(&tempAgent, agent) {
 			agent.Similar = append(agent.Similar, tempAgent.Name)
+
 		}
 	}
 	if similar != len(agent.Similar) {
