@@ -39,10 +39,7 @@ func (pl Platform) EditAgent(agent *Agent) bool {
 		return false
 	}
 	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), tmpAgent)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func (pl Platform) Register(agent *Agent) bool {

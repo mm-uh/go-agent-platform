@@ -1,8 +1,6 @@
 # Plataforma de Agentes
 
-Este proyecto representa una Plataforma de Agentes, como respuesta a un ejercicio final de clases de la asignatura `Sistemas Distribuidos` del plan de clases de la Universidad de la Habana, correspondiente a los estudiantes de 4to año de `Ciencias de la Computación`.
-
-Este es el proyecto principal de la organizacion [mm-uh](https://github.com/mm-uh). Esta consta de todas las herramientas usadas para la construcción de este proyecto, además de varias librerias para el uso de esta plataforma desde varios lenguajes de programación([Python], Golang), además de constar con una forma de generar librerias clientes que consumen los servicios de esta plataforma de una manera segura y rápida para otro conjunto de lenguajes de programacion, gracias a [Swagger](https://swagger.io).
+Una plataforma de agente permite la creación de soluciones distribuidas utilizando recursos y conocimientos distribuidos. Para ello es necesario que se puedan registrar los distintos agentes y su funcionalidad así como la identificación, localización y búsqueda de estos acorde a sus funcionalidades..
 
 ## Instalando
 
