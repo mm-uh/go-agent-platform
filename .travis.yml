@@ -1,12 +1,14 @@
-dist: bionic
+sudo: required
+
 language: go
+
 services:
 - docker
-env: GO111MODULE=on GOFLAGS='-mod vendor'
+
 go:
 - 1.12.6
-git:
-  depth: 1
+
+go_import_path: github.com/mm-uh/go-agent-platform
 
 notifications:
   email: false
