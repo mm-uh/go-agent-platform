@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -177,7 +176,6 @@ func (server ServerHttp) HandleGetAgentsFunctions(w http.ResponseWriter, r *http
 			return
 		}
 		response, err := json.Marshal(agents)
-		fmt.Println("RESPONSE ", agents)
 		if err != nil {
 			msg := "Couldn't marshal response"
 			http.Error(w, msg, http.StatusInternalServerError)
@@ -251,21 +249,18 @@ func (server ServerHttp) HandleGetPeers(w http.ResponseWriter, r *http.Request) 
 	peers := server.pl.Pex.GetPeers()
 	if peers == nil {
 		msg := "Couldn't get peers"
-		fmt.Println("1")
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
 	response, err := json.Marshal(peers)
 	if err != nil {
 		msg := "Couldn't marshal response"
-		fmt.Println("2")
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(response)
 	if err != nil {
-		fmt.Println("3")
 		msg := "Couldn't send response"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return

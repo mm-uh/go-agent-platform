@@ -121,7 +121,6 @@ func MakeRequest(endpoint, request string) (string, error) {
 	}
 	buff := make([]byte, 1024)
 	n, err := conn.Read(buff)
-	fmt.Println(string(buff))
 	//fmt.Println("NNNNNN ", n)
 	if err != nil {
 		return "", err

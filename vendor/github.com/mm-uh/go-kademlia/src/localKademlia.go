@@ -71,9 +71,9 @@ func (lk *LocalKademlia) refreshData() {
 		for iter.Next() {
 			val := iter.Value()
 			key := val.GetKey()
-			// fmt.Println("SAVINGGGGG ", key.String())
+
 			data := val.GetValue()
-			var timeStampedData TimeStampedString
+			var timeStampedData TimeStampedString = TimeStampedString{}
 			err := json.Unmarshal([]byte(data), &timeStampedData)
 			if err != nil {
 				break
@@ -83,11 +83,9 @@ func (lk *LocalKademlia) refreshData() {
 				break
 			}
 			for _, node := range nodes {
-				// fmt.Println("UPDATING IN ", node.GetIP())
 				node.UpdateKey(lk.GetContactInformation(), key, &timeStampedData)
 			}
 		}
-		time.Sleep(20 * time.Minute)
 	}
 
 }

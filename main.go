@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -43,13 +42,6 @@ func main() {
 	}
 
 	ln.RunServer(exited)
-	http.HandleFunc("/", EndpointHandler)
-	go func() {
-		err := http.ListenAndServe(fmt.Sprintf(":%d", port+1000), nil)
-		if err != nil {
-			return
-		}
-	}()
 
 	db := core.DatabaseAndPexBasedOnKademlia{Kd: ln}
 	if !gateway {
@@ -140,14 +132,6 @@ func main() {
 	if s := <-exited; s {
 		// Handle Error in method
 		fmt.Println("We get an error listen server")
-		return
-	}
-}
-
-func EndpointHandler(w http.ResponseWriter, r *http.Request) {
-	data := Node.GetInfo()
-	_, err := fmt.Fprintf(w, "%s", data)
-	if err != nil {
 		return
 	}
 }

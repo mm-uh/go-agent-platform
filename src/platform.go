@@ -72,17 +72,21 @@ func (pl Platform) ListenBroadcast(port, portForConnect int) {
 }
 
 func (pl Platform) EditAgent(agent *Agent) bool {
-	var tmpAgent Agent
+	var tmpAgent AgentWithUncheckedSimilars = AgentWithUncheckedSimilars{}
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(Name+":"+agent.Name, &agent)
+	err := pl.DataBase.Get(Name+":"+agent.Name, &tmpAgent)
 	if err != nil {
 		return false
 	}
-	if agent.Password != tmpAgent.Password {
+	if agent.Password != tmpAgent.Agent.Password {
 		return false
 	}
-	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), tmpAgent)
+	newAg := AgentWithUncheckedSimilars{
+		Agent:      *agent,
+		Uncheckeds: tmpAgent.Uncheckeds,
+	}
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), &newAg)
 	if err != nil {
 		return false
 	}
@@ -159,10 +163,10 @@ func (pl Platform) Register(agent *Agent) bool {
 		go eraseName()
 		return false
 	}
-	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
-	if err != nil {
-		go eraseName()
-		return false
+
+	regAgent := &AgentWithUncheckedSimilars{
+		Agent:      *agent,
+		Uncheckeds: make([]UncheckedSimilar, 0),
 	}
 
 	agentsByFunction := make([]string, 0)
@@ -177,13 +181,28 @@ func (pl Platform) Register(agent *Agent) bool {
 		go eraseName()
 		return false
 	}
+	fmt.Println(agentsByFunction)
+	for _, a := range agentsByFunction {
+		regAgent.Uncheckeds = append(regAgent.Uncheckeds, UncheckedSimilar{
+			Name:      a,
+			MyPeer:    false,
+			OtherPeer: false,
+		})
+	}
+
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), regAgent)
+	if err != nil {
+		go eraseName()
+		return false
+	}
+
 	agentsByFunction = append(agentsByFunction, agent.Name)
 	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Function, agent.Function), agentsByFunction)
 	if err != nil {
 		go eraseName()
 		return false
 	}
-
+	go UpdateSimilarToAgent(regAgent.Agent.Name, &pl)
 	return true
 }
 
@@ -227,13 +246,14 @@ func (pl Platform) GetAllFunctionNames() ([]string, error) {
 // Response[1] Agent Is Alive endpoint Addr
 // Response[2] Agent Documentation Addr
 func (pl Platform) LocateAgent(name string) ([3]Addr, error) {
-	var agent Agent
+	var agentWithUnchecked AgentWithUncheckedSimilars
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(Name+":"+name, &agent)
+	err := pl.DataBase.Get(Name+":"+name, &agentWithUnchecked)
 	if err != nil {
 		return [3]Addr{}, err
 	}
+	agent := agentWithUnchecked.Agent
 	addr := [3]Addr{}
 	for key, val := range agent.IsAliveService {
 		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
@@ -256,19 +276,15 @@ type RecoverAgent struct {
 
 // Recover an agent
 func (pl Platform) RecoverAgent(recover RecoverAgent) (Agent, error) {
-	var agent Agent
+	var agentWithUnchecked AgentWithUncheckedSimilars
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(Name+":"+recover.Name, &agent)
+	err := pl.DataBase.Get(Name+":"+recover.Name, &agentWithUnchecked)
 	if err != nil {
 		return Agent{}, err
 	}
-
+	agent := agentWithUnchecked.Agent
 	if IsAuthenticated(recover.Password, &agent) {
-		err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
-		if err != nil {
-			return Agent{}, err
-		}
 		return agent, nil
 	}
 
@@ -318,16 +334,16 @@ func (pl Platform) GetAgentsByFunctions(name string) ([]string, error) {
 
 // Return the name of the agents that are similar to this agent name
 func (pl Platform) GetSimilarToAgent(agentName string) []string {
-	var agent Agent
+	var agentWithUnchecked AgentWithUncheckedSimilars
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(Name+":"+agentName, &agent)
+	err := pl.DataBase.Get(Name+":"+agentName, &agentWithUnchecked)
 	if err != nil {
 		return []string{}
 	}
-	UpdateSimilarToAgent(&agent, &pl)
-
-	return agent.Similar
+	//agent := agentWithUnchecked.Agent
+	UpdateSimilarToAgent(agentWithUnchecked.Agent.Name, &pl)
+	return agentWithUnchecked.Agent.Similar
 }
 
 type UpdaterAgent struct {
@@ -341,14 +357,15 @@ type UpdaterAgent struct {
 
 // Return the name of the agents that are similar to this agent name
 func (pl Platform) AddEndpoints(agentUpdated UpdaterAgent) error {
-	var agent Agent
+	var agentWithUnchecked AgentWithUncheckedSimilars
 	// Here we follow the indexation criteria:
 	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := pl.DataBase.Get(Name+":"+agentUpdated.Name, &agent)
+	err := pl.DataBase.Get(Name+":"+agentUpdated.Name, &agentWithUnchecked)
 	if err != nil {
 
 		return err
 	}
+	agent := agentWithUnchecked.Agent
 	if IsAuthenticated(agentUpdated.Password, &agent) {
 		agent.EndpointService = Union(agent.EndpointService, agentUpdated.EndpointService)
 		for k, v := range agentUpdated.Documentation {
@@ -358,13 +375,15 @@ func (pl Platform) AddEndpoints(agentUpdated UpdaterAgent) error {
 			agent.IsAliveService[k] = v
 		}
 	}
-
-	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), agent)
+	newAg := AgentWithUncheckedSimilars{
+		Agent:      agent,
+		Uncheckeds: agentWithUnchecked.Uncheckeds,
+	}
+	err = pl.DataBase.Store(fmt.Sprintf("%s:%s", Name, agent.Name), &newAg)
 	if err != nil {
 		return err
 	}
-
-	go UpdateSimilarToAgent(&agent, &pl)
+	go UpdateSimilarToAgent(newAg.Agent.Name, &pl)
 	return nil
 }
 

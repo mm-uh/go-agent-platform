@@ -1,11 +1,20 @@
 package core
 
 import (
-	"fmt"
+	"errors"
 	"strconv"
-
-	"github.com/sirupsen/logrus"
 )
+
+type AgentWithUncheckedSimilars struct {
+	Agent      Agent
+	Uncheckeds []UncheckedSimilar
+}
+
+type UncheckedSimilar struct {
+	Name      string
+	MyPeer    bool
+	OtherPeer bool
+}
 
 type Agent struct {
 	Name     string
@@ -33,9 +42,7 @@ func NewAgent(name, functionality string, endpoints []Addr, alive, doc map[strin
 	return agent
 }
 
-func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
-	var agents []string
-	var similar int
+func UpdateSimilarToAgent(agentName string, platform *Platform) {
 	unlockKey := func(key string) {
 		go func() {
 			for {
@@ -47,78 +54,108 @@ func UpdateSimilarToAgent(agent *Agent, platform *Platform) {
 			}
 		}()
 	}
-	if agent.Similar == nil {
-		similar = 0
-		agent.Similar = make([]string, 0)
-	} else {
-		similar = len(agent.Similar)
-	}
-	// Here we follow the indexation criteria:
-	// [keys] : [Value] -> [criteria:AgentName] : [Agent]
-	err := platform.DataBase.Get(Function+":"+agent.Function, &agents)
-	if err != nil {
-		return
-	}
-	for _, val := range agents {
-		if val == agent.Name {
-			continue
-		}
-		var tempAgent Agent
-		// Get Agents with the same function
-		err := platform.DataBase.Get(Name+":"+val, &tempAgent)
+
+	var agent AgentWithUncheckedSimilars
+	platform.DataBase.Get(Name+":"+agentName, &agent)
+
+	newUnchecked := make([]UncheckedSimilar, 0)
+	for _, un := range agent.Uncheckeds {
+		different := false
+		var otherAgent AgentWithUncheckedSimilars
+		key := Name + ":" + un.Name
+		err := platform.DataBase.Lock(key)
 		if err != nil {
 			continue
 		}
-		if AreCompatibles(agent, &tempAgent) {
-			err := platform.DataBase.Lock(Name + ":" + val)
-			if err != nil {
-				continue
-			}
-			defer unlockKey(Name + ":" + val)
-			tempAgent.Similar = append(tempAgent.Similar, val)
-			fmt.Println("HERE ", tempAgent.Similar)
-			err = platform.DataBase.Store(Name+":"+val, &tempAgent)
-			if err != nil {
-				continue
+		defer unlockKey(key)
+		err = platform.DataBase.Get(Name+":"+un.Name, &otherAgent)
+		if err != nil {
+			continue
+		}
+
+		if !un.MyPeer {
+			ok, err := AreCompatibles(&agent.Agent, &otherAgent.Agent)
+			if err == nil {
+				un.MyPeer = true
+				if !ok {
+					different = true
+				}
 			}
 		}
-		if AreCompatibles(&tempAgent, agent) {
-			agent.Similar = append(agent.Similar, tempAgent.Name)
+
+		if !un.OtherPeer && !different {
+			ok, err := AreCompatibles(&otherAgent.Agent, &agent.Agent)
+			if err == nil {
+				un.OtherPeer = true
+				if !ok {
+					different = true
+				}
+			}
+		}
+
+		nU := UncheckedSimilar{
+			Name:      un.Name,
+			MyPeer:    un.MyPeer,
+			OtherPeer: un.OtherPeer,
+		}
+
+		if un.OtherPeer && un.MyPeer {
+			if !different {
+				agent.Agent.Similar = append(agent.Agent.Similar, un.Name)
+				otherAgent.Agent.Similar = append(otherAgent.Agent.Similar, agent.Agent.Name)
+				for i, ag := range otherAgent.Uncheckeds {
+					if ag.Name == agent.Agent.Name {
+						otherAgent.Uncheckeds = removeUncheckSimilar(otherAgent.Uncheckeds, i)
+					}
+				}
+			}
+		} else {
+
+			if !different {
+				newUnchecked = append(newUnchecked, nU)
+				otherAgent.Uncheckeds = append(otherAgent.Uncheckeds, UncheckedSimilar{
+					Name:      agent.Agent.Name,
+					MyPeer:    un.OtherPeer,
+					OtherPeer: un.MyPeer,
+				})
+			} else {
+				for i, ag := range otherAgent.Uncheckeds {
+					if ag.Name == agent.Agent.Name {
+						otherAgent.Uncheckeds = removeUncheckSimilar(otherAgent.Uncheckeds, i)
+						break
+					}
+				}
+
+			}
 
 		}
+
+		platform.DataBase.Store(key, &otherAgent)
+
 	}
-	if similar != len(agent.Similar) {
-		err := platform.DataBase.Lock(Name + ":" + agent.Name)
-		if err != nil {
-			logrus.Warn("Couldn't store agent")
-			return
-		}
-		defer unlockKey(Name + ":" + agent.Name)
-		err = platform.DataBase.Store(Name+":"+agent.Name, &agent)
-		if err != nil {
-			logrus.Warn("Couldn't store agent")
-		}
-	}
+
+	agent.Uncheckeds = newUnchecked
+
+	platform.DataBase.Store(Name+":"+agentName, &agent)
+
 }
 
-func AreCompatibles(tempAgent, agent *Agent) bool {
+func AreCompatibles(tempAgent, agent *Agent) (bool, error) {
 	for key, val := range tempAgent.IsAliveService {
 		// get if the endpoint is alive
 		if NodeIsAlive(val.Ip + ":" + strconv.Itoa(val.Port)) {
-			accepted := 0
 			// Check that all test cases follow the criteria
 			for _, testCase := range agent.TestCases {
 				// Check if are compatibles the test cases
-				if checkTestCase(testCase, key) {
-					accepted++
-					continue
+				if !checkTestCase(testCase, key) {
+					return false, nil
 				}
 				break
 			}
-			return accepted == len(agent.TestCases)
+			return true, nil
 		}
 	}
-	return false
+	return false, errors.New("There is not available endpoint")
 }
 
 func checkTestCase(testCase TestCase, host string) bool {
@@ -127,4 +164,15 @@ func checkTestCase(testCase TestCase, host string) bool {
 		return false
 	}
 	return response == testCase.Output
+}
+
+func NewAgentWithUncheckedSimilars(name, functionality string, endpoints []Addr, alive, doc map[string]Addr, testCases []TestCase, password string) *AgentWithUncheckedSimilars {
+	return &AgentWithUncheckedSimilars{
+		Agent:      *NewAgent(name, functionality, endpoints, alive, doc, testCases, password),
+		Uncheckeds: make([]UncheckedSimilar, 0),
+	}
+}
+
+func removeUncheckSimilar(list []UncheckedSimilar, index int) []UncheckedSimilar {
+	return append(list[:index], list[index+1:]...)
 }
