@@ -13,15 +13,14 @@ go_import_path: github.com/mm-uh/go-agent-platform
 notifications:
   email: false
 
-before_install:                                                                 
-- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh  
-- dep ensure
 before_script:
-- go install github.com/golangci/golangci-lint/cmd/golangci-lint
+- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.21.0
+
 script:
 - golangci-lint run
 - go test -v -race ./...
 - make build
+
 before_deploy:
 - echo "Generating distribution archive files"
 - docker build -t mm-uh/go-agent-platform:latest .
