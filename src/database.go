@@ -25,7 +25,7 @@ func (db *DatabaseAndPexBasedOnKademlia) Get(key string, receiver interface{}) e
 		return err
 	}
 	if val == "" && key[:Min(9, len(key))] == Function+":" {
-		receiver = []string{}
+		receiver = []string{}//nolint
 		return nil
 	}
 	return json.Unmarshal([]byte(val), receiver)

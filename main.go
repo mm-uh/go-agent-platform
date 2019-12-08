@@ -17,6 +17,21 @@ import (
 var Node *kademlia.LocalKademlia
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Invalid arguments")
+		if len(os.Args) > 1 && (os.Args[1] == "-h" || os.Args[1] == "--help") {
+			fmt.Println("Usage:\n" +
+				"app <ip_to_run> <port_to_run> [remote_ip] [remote_port]\n" +
+				"\n" +
+				"<ip_to_run>   -> IP that the app will take\n" +
+				"<host_to_run> -> Port that the app will run\n" +
+				"[remote_ip]   -> (Optional) IP of another platform\n" +
+				"[remote_port] -> (Optional) Port of another platform")
+		} else {
+			fmt.Println("Run '<app_name> -h'")
+		}
+		return
+	}
 	ip := os.Args[1]
 	portStr := os.Args[2]
 	port, err := strconv.Atoi(portStr)
