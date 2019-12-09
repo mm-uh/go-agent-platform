@@ -35,11 +35,11 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:194ef57869c51dce0abdce39f408a8e047694e3951f277c122e4356853e48ad1"
+  digest = "1:e4ccbc8c7b4cb35f774db495fa716de871a6d53dc213bb9c360d7085a010e835"
   name = "github.com/mm-uh/go-kademlia"
   packages = ["src"]
   pruneopts = "UT"
-  revision = "4fcb2c8b994480f5ca846fcd3a81f5e605a5feb5"
+  revision = "db1099813ff411abb8cc51fb821ae210d919d84f"
 
 [[projects]]
   branch = "master"
