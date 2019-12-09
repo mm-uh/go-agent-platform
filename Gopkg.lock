@@ -39,7 +39,7 @@
   name = "github.com/mm-uh/go-kademlia"
   packages = ["src"]
   pruneopts = "UT"
-  revision = "db1099813ff411abb8cc51fb821ae210d919d84f"
+  revision = "9bd803ddd2c450197266ee2799123cd3c62bcb6a"
 
 [[projects]]
   branch = "master"
